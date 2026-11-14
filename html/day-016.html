@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 16: Architecture track: Documenting decisions: ADRs; first design kata</title>
+<script>(function(){try{var s=localStorage.getItem('bastion-theme');var d=s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();</script>
+<style>
+:root{--bg:#f7f8fb;--card:#ffffff;--ink:#1b2130;--muted:#5d6678;--line:#e3e7ef;--accent:#2f6fec;--accent-soft:#e8f0ff;
+--sec:#c0392b;--sec-soft:#fdecea;--arch:#7a4ce0;--arch-soft:#f1ebff;--ok:#1f9d63;--ok-soft:#e6f6ee;--warn:#b7791f;--warn-soft:#fff6e0;
+--code-bg:#f4f6fa;--kw:#8a2be2;--str:#0b7a3e;--num:#b35900;--com:#7b8494;--fn:#1f5fbf;--bi:#a0306a;--shadow:0 1px 2px rgba(20,30,60,.06),0 4px 14px rgba(20,30,60,.06)}
+[data-theme="dark"]{--bg:#0f131a;--card:#171c26;--ink:#e6e9f0;--muted:#9aa3b5;--line:#2a3140;--accent:#6ea0ff;--accent-soft:#1c2740;
+--sec:#ff7b6b;--sec-soft:#3a1f1d;--arch:#b597ff;--arch-soft:#271f3d;--ok:#4fd39a;--ok-soft:#173027;--warn:#f0c060;--warn-soft:#352b14;
+--code-bg:#11161f;--kw:#c792ea;--str:#a5e075;--num:#f78c6c;--com:#6b7689;--fn:#82aaff;--bi:#ff9cac;--shadow:none}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+header.hero{background:linear-gradient(135deg,var(--accent) 0%,#5b3fd6 100%);color:#fff;border-radius:18px;padding:22px 22px 18px;box-shadow:var(--shadow);position:relative}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;opacity:.95}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.18);white-space:nowrap}
+.hero h1{margin:10px 0 6px;font-size:clamp(22px,4vw,30px);line-height:1.2}
+.hero .sub{opacity:.9;font-size:14px}
+.bar{height:8px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;margin-top:12px}
+.bar>span{display:block;height:100%;background:#fff;border-radius:99px}
+.barlabel{display:flex;justify-content:space-between;font-size:12px;margin-top:4px;opacity:.9}
+.toggle{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:13px}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:16px 0;box-shadow:var(--shadow)}
+section>h2{margin:0 0 10px;font-size:19px;display:flex;align-items:center;gap:8px}
+.ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:15px}
+.tldr{border-left:5px solid var(--accent)}
+.tldr p{margin:.3em 0}
+ul.obj{margin:.4em 0 0;padding-left:1.2em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.concept{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--card)}
+.concept h3{margin:0 0 6px;font-size:16.5px}
+.concept p{margin:.45em 0}
+.concept.wide{grid-column:1/-1}
+.analogy{background:var(--warn-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+.analogy b{color:var(--warn)}
+.diagram{margin:10px 0;overflow-x:auto}
+.diagram svg{max-width:100%;height:auto;display:block}
+.diagram svg.bars{max-width:620px}
+blockquote{margin:.6em 0;padding:8px 14px;border-left:4px solid var(--line);color:var(--muted);font-style:italic}
+.mermaid-fallback{display:none}
+.no-mermaid .mermaid{display:none}
+.no-mermaid .mermaid-fallback{display:block}
+.tablewrap{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft);color:var(--ink)}
+tr:nth-child(even) td{background:color-mix(in srgb,var(--card) 94%,var(--ink) 6%)}
+.rule{background:var(--ok-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+pre.code{background:var(--code-bg);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;margin:8px 0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:.92em;background:var(--code-bg);padding:1px 5px;border-radius:5px}
+pre code{background:none;padding:0}
+.k{color:var(--kw);font-weight:600}.s{color:var(--str)}.n{color:var(--num)}.c{color:var(--com);font-style:italic}.f{color:var(--fn)}.b{color:var(--bi)}
+.check{list-style:none;padding:0;margin:6px 0}
+.check li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin:6px 0}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--ok);flex:none}
+.check li.done{background:var(--ok-soft);text-decoration:line-through;color:var(--muted)}
+.counter{font-size:13px;color:var(--muted)}
+.callout{border-radius:14px;padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout h2{margin:0 0 6px;font-size:17px}
+.callout.sec{background:var(--sec-soft);border-left:6px solid var(--sec)}
+.callout.sec h2{color:var(--sec)}
+.callout.arch{background:var(--arch-soft);border-left:6px solid var(--arch)}
+.callout.arch h2{color:var(--arch)}
+.callout p{margin:.4em 0}
+.res li{margin:5px 0}
+.quiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{perspective:1000px;cursor:pointer;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit}
+.card .inner{display:grid;transition:transform .5s;transform-style:preserve-3d;min-height:130px}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;padding:14px;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.front{background:var(--accent-soft)}
+.back{background:var(--ok-soft);transform:rotateY(180deg)}
+.face small{color:var(--muted);font-size:12px;margin-top:8px}
+.tomorrow{border-left:5px solid var(--arch)}
+footer{color:var(--muted);font-size:12.5px;text-align:center;padding:10px 0 30px}
+@media (max-width:600px){.wrap{padding:10px}section{padding:14px}header.hero{padding:18px 16px}.toggle{top:10px;right:10px}}
+@media print{.toggle{display:none}.card .inner{transform:none!important}.back{transform:none;margin-top:6px}.face{backface-visibility:visible}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" data-day="16">
+<header class="hero"><button class="toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">☾ Dark</button>
+<div class="meta"><span class="pill">Day 16 / 203</span><span class="pill">Tuesday 2026-11-03</span><span class="pill">Week 3 / 29</span><span class="pill">⏱ 120 min</span><span class="pill">arch</span></div>
+<h1>Architecture track: Documenting decisions: ADRs; first design kata</h1>
+<div class="sub">Phase 1: LLM and application foundations · Testing an LLM service (M1)</div>
+<div class="bar" aria-label="Roadmap progress"><span style="width:7.88%"></span></div>
+<div class="barlabel"><span>Roadmap progress 7.9%</span><span>Ends Sun 9 May 2027</span></div></header>
+<section class="tldr"><h2><span class="ico">⚡</span>Today in 30 seconds</h2><p>Today you start two habits that run through the whole roadmap: <strong>writing down decisions</strong> and <strong>practising design on paper</strong>.</p>
+<p>An <strong>Architecture Decision Record (ADR)</strong> is a short text file, one per significant decision, with a fixed shape: <em>Title, Status, Context, Decision, Consequences</em> (Michael Nygard&#x27;s 2011 format). ADRs are numbered, kept in the repo next to the code, and never rewritten: when a decision changes you write a new ADR that <strong>supersedes</strong> the old one. That history is what lets a reviewer, or you in six months, understand <em>why</em> the system looks the way it does.</p>
+<p>Then you do <strong>Kata #1: a distributed rate limiter</strong>, using the 9-part kata template from Section 8. It&#x27;s a classic because it forces real tradeoffs: accuracy vs latency, a shared store vs local counters, and fail-open vs fail-closed when that store goes down. It&#x27;s also directly useful for Bastion, whose LLM gateway will need per-tenant token budgets. This is Architecture Checkpoint <strong>A1</strong>.</p><p><strong>By the end of today you can:</strong></p><ul class="obj"><li>Write an ADR in Nygard&#x27;s format and know when a decision deserves one</li><li>Use statuses and supersession instead of editing old decisions</li><li>Work through the 9-part kata template for a distributed rate limiter</li><li>Compare token bucket, fixed window and sliding window algorithms, and state one tradeoff explicitly</li></ul></section>
+<section><h2><span class="ico">🧠</span>Concepts</h2><div class="grid"><article class="concept wide"><h3>1. What an ADR is, and why architects keep them</h3><p>Code shows <strong>what</strong> the system does. It rarely shows <strong>why</strong>, or which alternatives were rejected. Nygard&#x27;s point is that teams lose that reasoning fast, then either blindly accept old decisions or blindly reverse them.</p>
+<p>An ADR is deliberately small: one decision, one to two pages at most, plain Markdown, committed under <code>docs/adr/</code> (Bastion: <code>bastion/docs/architecture/adr/</code>). Write one when a decision is <strong>architecturally significant</strong>: it affects structure, quality attributes, dependencies, interfaces or construction techniques, or it would be expensive to reverse.</p>
+<blockquote>If a new teammate would ask &quot;why on earth did they do it this way?&quot;, that&#x27;s an ADR.</blockquote></article><article class="concept wide"><h3>2. The five sections</h3><p>Nygard&#x27;s original template. Keep each section short and concrete.</p><div class="tablewrap"><table><thead><tr><th>Section</th><th>What goes in it</th><th>Bastion example (ADR-001)</th></tr></thead><tbody><tr><td>Title</td><td>Numbered short noun phrase</td><td>ADR-001: Use structured JSON output with schema validation for triage</td></tr><tr><td>Status</td><td>Proposed, Accepted, Deprecated, or Superseded by ADR-NNN</td><td>Accepted</td></tr><tr><td>Context</td><td>The forces at play: requirements, constraints, quality attributes, facts. Neutral, no decision yet</td><td>Downstream code must parse verdicts; free text failed parsing in Week 2 tests; p95 budget is 8 s</td></tr><tr><td>Decision</td><td>What we will do, in active voice: &quot;We will...&quot;</td><td>We will request JSON matching the <code>Verdict</code> schema and retry once on validation failure</td></tr><tr><td>Consequences</td><td>Everything that follows, good <em>and</em> bad</td><td>Parse errors near zero; one retry adds latency and cost on failures; schema changes need a migration note</td></tr></tbody></table></div></article><article class="concept wide"><h3>3. Lifecycle: never edit, supersede</h3><p>Once an ADR is <strong>Accepted</strong> it becomes history. If you change your mind, write a new ADR and mark the old one <em>Superseded by ADR-00N</em>. The log then tells the story of how the architecture evolved.</p><div class="diagram"><svg viewBox="0 0 802 124" role="img" aria-label="Fixing typos is fine. Changing the decision means a new record." xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><g style="color:var(--muted)" font-family="system-ui,sans-serif" font-size="13"><rect x="10" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Proposed</text><text x="95.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">open for review</text><line x1="182" y1="47.0" x2="210" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="214" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="299.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Accepted</text><text x="299.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">the decision</text><line x1="386" y1="47.0" x2="414" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="418" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="503.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Deprecated</text><text x="503.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">no longer applies</text><line x1="590" y1="47.0" x2="618" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="622" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="707.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Superseded</text><text x="707.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">points to ADR-00N</text></g></svg><div class="counter">Fixing typos is fine. Changing the decision means a new record.</div></div></article><article class="concept"><h3>4. Good ADR habits</h3><ul><li><strong>One decision per record.</strong> &quot;Use Postgres and Redis and Kubernetes&quot; is three ADRs.</li><li><strong>List the options you rejected</strong> and why; that&#x27;s the part people forget and most need.</li><li><strong>Write consequences honestly</strong>, including the costs. An ADR with only upsides is a sales pitch.</li><li><strong>Link evidence:</strong> the utility-tree scenario from Day 9, an eval result, a benchmark.</li><li><strong>Keep it in the repo</strong>, reviewed in a pull request like code.</li></ul></article><article class="concept"><h3>5. Common ADR mistakes</h3><ul><li>Writing it <em>after</em> the fact as paperwork, with no real alternatives considered</li><li>A Context section that already argues for the answer</li><li>Recording trivia (library minor versions) and missing the big calls</li><li>Editing an accepted ADR so history disappears</li><li>Hiding it in a wiki nobody opens</li></ul>
+<blockquote>Variants like MADR add an explicit <em>Considered Options</em> section. Any template works if you use it consistently.</blockquote><div class="analogy"><b>Analogy:</b> An ADR log is like a ship&#x27;s logbook: short entries, written at the time, never torn out, so anyone can reconstruct why the ship turned.</div></article><article class="concept wide"><h3>6. The design kata template (Section 8)</h3><p>A kata is a timed design exercise on paper. You&#x27;ll use the same nine headings for all four katas, so they become a portfolio for Checkpoint A3.</p><div class="tablewrap"><table><thead><tr><th>#</th><th>Heading</th><th>For the rate limiter, answer...</th></tr></thead><tbody><tr><td>1</td><td>Problem and constraints</td><td>Limit what, per whom, how many requests/s at peak, how much added latency is OK?</td></tr><tr><td>2</td><td>API / interface</td><td><code>check(key, cost) -&gt; allow, remaining, retry_after</code>; HTTP 429 with <code>Retry-After</code></td></tr><tr><td>3</td><td>High-level design</td><td>Where it runs (gateway, sidecar, library) and where counters live</td></tr><tr><td>4</td><td>Data model and consistency</td><td>Counter per key, TTL, atomic update; exact vs approximate</td></tr><tr><td>5</td><td>Failure modes</td><td>Store down or slow, clock skew, hot keys, retry storms</td></tr><tr><td>6</td><td>Security and tenancy</td><td>Key by authenticated tenant, not spoofable headers; per-tenant fairness</td></tr><tr><td>7</td><td>Tradeoffs</td><td>What you rejected and why</td></tr><tr><td>8</td><td>Fitness functions / SLOs</td><td>Added p99 latency, false-reject rate, over-admission under load</td></tr><tr><td>9</td><td>Open questions</td><td>Global vs per-region limits? Charge by tokens or requests?</td></tr></tbody></table></div></article><article class="concept wide"><h3>7. Rate-limit algorithms compared</h3><p>The System Design Primer and most interview write-ups cover these four. All are valid; they trade accuracy, memory and burst behaviour.</p><div class="tablewrap"><table><thead><tr><th>Algorithm</th><th>How it works</th><th>Pros</th><th>Cons</th><th>Choose when</th></tr></thead><tbody><tr><td>Fixed window counter</td><td>Count per key per clock window (e.g. per minute), reset at the boundary</td><td>Tiny state, one atomic increment</td><td>Up to 2x the limit can pass around a window boundary</td><td>Coarse quotas where edge bursts don&#x27;t matter</td></tr><tr><td>Sliding window log</td><td>Store every request timestamp, count those in the last N seconds</td><td>Exact</td><td>Memory grows with traffic per key</td><td>Low-volume, high-value limits</td></tr><tr><td>Sliding window counter</td><td>Weighted blend of the current and previous fixed windows</td><td>Near-exact, small state</td><td>Approximate</td><td>A good general default for API limits</td></tr><tr><td>Token bucket</td><td>Tokens refill at a steady rate up to a capacity; each request spends tokens</td><td>Allows controlled bursts; supports <em>cost</em> per request</td><td>Two parameters to tune; bursts may surprise downstream</td><td>APIs with bursty clients, and LLM token budgets</td></tr></tbody></table></div></article><article class="concept wide"><h3>8. Where the limiter sits</h3><p>For a distributed service, every gateway replica must agree on a key&#x27;s usage, so counters usually live in a shared fast store such as Redis, updated atomically (a Lua script or <code>INCR</code> with expiry). The alternative is local counters per replica, which are faster but only approximate.</p><div class="diagram"><pre class="mermaid">flowchart LR
+  C[Client / tenant] --&gt; LB[Load balancer]
+  LB --&gt; G1[Gateway replica 1]
+  LB --&gt; G2[Gateway replica 2]
+  G1 -- check key, cost --&gt; R[(Shared counter store)]
+  G2 -- check key, cost --&gt; R
+  G1 -- allowed --&gt; S[Bastion triage service]
+  G2 -- 429 + Retry-After --&gt; C
+  R -. store down? .-&gt; F{Fail open or fail closed}
+  style F fill:#fde2e2,stroke:#c0392b</pre><div class="mermaid-fallback"><p class="counter">Diagram source (Mermaid CDN unavailable):</p><pre class="code">flowchart LR
+  C[Client / tenant] --&gt; LB[Load balancer]
+  LB --&gt; G1[Gateway replica 1]
+  LB --&gt; G2[Gateway replica 2]
+  G1 -- check key, cost --&gt; R[(Shared counter store)]
+  G2 -- check key, cost --&gt; R
+  G1 -- allowed --&gt; S[Bastion triage service]
+  G2 -- 429 + Retry-After --&gt; C
+  R -. store down? .-&gt; F{Fail open or fail closed}
+  style F fill:#fde2e2,stroke:#c0392b</pre></div><div class="counter">Request path with a shared counter store. The red decision is the failure-mode choice you must write down.</div></div></article><article class="concept"><h3>9. Failure modes worth writing down</h3><ul><li><strong>Store unavailable:</strong> <em>fail open</em> (allow, protect availability) or <em>fail closed</em> (reject, protect the backend and budget). Often: fail open with a local fallback limit.</li><li><strong>Store slow:</strong> put a tight timeout (a few ms) on the check; the limiter must not become the bottleneck.</li><li><strong>Race conditions:</strong> read-then-write lets two replicas both admit the last slot. Use atomic operations.</li><li><strong>Hot keys:</strong> one huge tenant hammers one shard; consider local pre-aggregation.</li><li><strong>Retry storms:</strong> rejected clients retry immediately; return <code>Retry-After</code> and expect backoff.</li></ul></article><article class="concept"><h3>10. The LLM twist</h3><p>Requests aren&#x27;t equal in an LLM system: one call may use 200 tokens, another 20,000. Providers publish limits in both <strong>requests per minute</strong> and <strong>tokens per minute</strong>, and Bastion&#x27;s gateway will need per-tenant <strong>token budgets</strong> too.</p>
+<p>A token bucket handles this naturally: spend <code>cost = estimated tokens</code> instead of 1. You know input tokens before the call but output tokens only after, so reserve an estimate, then reconcile with the real usage.</p></article></div></section>
+<section><h2><span class="ico">🐍</span>rate_limiter_kata.py: token bucket vs sliding window, plus a token budget</h2><p>Tested with Python 3.12, standard library only: <code>python3 rate_limiter_kata.py</code>. It runs both algorithms on the same nominal policy (10 requests per 10 seconds) against a burst and a steady stream, then shows a token-bucket used as an LLM tokens-per-minute budget (numbers are illustrative).</p><pre class="code"><code><span class="s">&quot;&quot;&quot;rate_limiter_kata.py - Day 16: compare two rate-limit algorithms for Kata #1, fully offline.
+
+Run: python3 rate_limiter_kata.py
+&quot;&quot;&quot;</span>
+<span class="k">from</span> collections <span class="k">import</span> deque
+
+
+<span class="k">class</span> <span class="f">TokenBucket</span>:
+    <span class="s">&quot;&quot;&quot;Refills `rate` tokens/second up to `capacity`. Allows bursts up to capacity.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, rate, capacity):
+        <span class="k">self</span>.rate, <span class="k">self</span>.capacity = rate, capacity
+        <span class="k">self</span>.tokens, <span class="k">self</span>.last = capacity, <span class="n">0.0</span>
+
+    <span class="k">def</span> <span class="f">allow</span>(<span class="k">self</span>, now, cost=<span class="n">1</span>):
+        <span class="k">self</span>.tokens = <span class="b">min</span>(<span class="k">self</span>.capacity, <span class="k">self</span>.tokens + (now - <span class="k">self</span>.last) * <span class="k">self</span>.rate)
+        <span class="k">self</span>.last = now
+        <span class="k">if</span> <span class="k">self</span>.tokens &gt;= cost:
+            <span class="k">self</span>.tokens -= cost
+            <span class="k">return</span> <span class="k">True</span>
+        <span class="k">return</span> <span class="k">False</span>
+
+
+<span class="k">class</span> <span class="f">SlidingWindowLog</span>:
+    <span class="s">&quot;&quot;&quot;At most `limit` requests in any rolling `window` seconds. Exact, but stores every timestamp.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, limit, window):
+        <span class="k">self</span>.limit, <span class="k">self</span>.window, <span class="k">self</span>.log = limit, window, deque()
+
+    <span class="k">def</span> <span class="f">allow</span>(<span class="k">self</span>, now):
+        <span class="k">while</span> <span class="k">self</span>.log <span class="k">and</span> <span class="k">self</span>.log[<span class="n">0</span>] &lt;= now - <span class="k">self</span>.window:
+            <span class="k">self</span>.log.popleft()
+        <span class="k">if</span> <span class="b">len</span>(<span class="k">self</span>.log) &lt; <span class="k">self</span>.limit:
+            <span class="k">self</span>.log.append(now)
+            <span class="k">return</span> <span class="k">True</span>
+        <span class="k">return</span> <span class="k">False</span>
+
+
+<span class="k">def</span> <span class="f">simulate</span>(limiter, times):
+    <span class="k">return</span> <span class="b">sum</span>(limiter.allow(t) <span class="k">for</span> t <span class="k">in</span> times)
+
+
+<span class="k">if</span> <span class="b">__name__</span> == <span class="s">&quot;__main__&quot;</span>:
+    <span class="c"># Same nominal policy: 10 requests per 10 seconds for one tenant.</span>
+    burst = [<span class="n">0.0</span>] * <span class="n">15</span>                                  <span class="c"># 15 requests at once</span>
+    steady = [i * <span class="n">0.5</span> <span class="k">for</span> i <span class="k">in</span> <span class="b">range</span>(<span class="n">40</span>)]               <span class="c"># 2 req/s for 20 s</span>
+    <span class="k">for</span> name, times <span class="k">in</span> [(<span class="s">&quot;burst of 15&quot;</span>, burst), (<span class="s">&quot;steady 2 req/s for 20 s&quot;</span>, steady)]:
+        tb = simulate(TokenBucket(rate=<span class="n">1.0</span>, capacity=<span class="n">10</span>), times)
+        sw = simulate(SlidingWindowLog(limit=<span class="n">10</span>, window=<span class="n">10.0</span>), times)
+        <span class="b">print</span>(<span class="s">f&quot;</span>{name:<span class="s">26s</span>}<span class="s"> token bucket allowed </span>{tb:<span class="s">2d</span>}<span class="s">/</span>{<span class="b">len</span>(times)}<span class="s">   sliding log allowed </span>{sw:<span class="s">2d</span>}<span class="s">/</span>{<span class="b">len</span>(times)}<span class="s">&quot;</span>)
+    <span class="c"># LLM twist: limit by tokens, not requests. A 6,000-token prompt costs 6 units of 1,000 tokens.</span>
+    tpm = TokenBucket(rate=<span class="n">10_000</span> / <span class="n">60</span>, capacity=<span class="n">10_000</span>)  <span class="c"># 10k tokens/minute, illustrative</span>
+    <span class="b">print</span>(<span class="s">&quot;token-budget: 6k prompt -&gt;&quot;</span>, tpm.allow(<span class="n">0.0</span>, <span class="n">6000</span>), <span class="s">&quot;| another 6k prompt -&gt;&quot;</span>, tpm.allow(<span class="n">1.0</span>, <span class="n">6000</span>),
+          <span class="s">&quot;| after 30 s -&gt;&quot;</span>, tpm.allow(<span class="n">31.0</span>, <span class="n">6000</span>))</code></pre><p>Expected output: both allow <code>10/15</code> of the burst, but on the steady stream the token bucket allows <code>29/40</code> while the sliding log allows <code>20/40</code>. Same headline limit, different behaviour: the bucket starts full and refills at 1/s, so it admits its starting capacity <em>plus</em> the refill rate, while the sliding log never exceeds 10 in any 10 s window. The last line shows a 6,000-token prompt allowed, a second one rejected one second later, and allowed again after 30 s of refill. That difference is exactly the kind of tradeoff your kata should state. In a real deployment the state lives in a shared store and the update must be atomic.</p></section>
+<section><h2><span class="ico">✅</span>Hands-on task</h2><p>About 2 hours. Read Nygard&#x27;s post (about 15 min) and the rate-limiting material linked from the System Design Primer (about 25 min). Write ADR-001 for one real Bastion decision you&#x27;ve already made (about 20 min). Then spend about 60 min on Kata #1 using the 9 headings, committed under <code>bastion/docs/architecture/</code>.</p><ul class="check"><li><input type="checkbox" id="t0" aria-label="task 1"><label for="t0">Read Nygard, Documenting Architecture Decisions</label></li><li><input type="checkbox" id="t1" aria-label="task 2"><label for="t1">Read the rate-limiting material in the System Design Primer</label></li><li><input type="checkbox" id="t2" aria-label="task 3"><label for="t2">Create <code>bastion/docs/architecture/adr/</code> with a template file</label></li><li><input type="checkbox" id="t3" aria-label="task 4"><label for="t3">Write ADR-001 for a decision you already made (for example structured JSON output, or the provider choice), listing at least one rejected option</label></li><li><input type="checkbox" id="t4" aria-label="task 5"><label for="t4">Run <code>rate_limiter_kata.py</code> and explain why the two algorithms allow different counts on the steady stream</label></li><li><input type="checkbox" id="t5" aria-label="task 6"><label for="t5">Write Kata #1 (rate limiter) with all 9 template headings, at most one page</label></li><li><input type="checkbox" id="t6" aria-label="task 7"><label for="t6">Pick an algorithm and a storage choice, and justify them with your scale assumptions</label></li><li><input type="checkbox" id="t7" aria-label="task 8"><label for="t7">Decide fail-open vs fail-closed and state that tradeoff explicitly</label></li><li><input type="checkbox" id="t8" aria-label="task 9"><label for="t8">Name one fitness function or SLO for the limiter</label></li><li><input type="checkbox" id="t9" aria-label="task 10"><label for="t9">Commit both files under <code>bastion/docs/architecture/</code></label></li><li><input type="checkbox" id="t10" aria-label="task 11"><label for="t10">Answer the recall cards from memory, then check</label></li></ul><div class="counter" id="checkCount"></div></section>
+<div class="callout sec"><h2>🛡 Security lens</h2><p><strong>A rate limiter is a security control, so design it like one.</strong></p>
+<ul><li><strong>Key on identity you trust:</strong> the authenticated tenant or API key, never a client-supplied header like <code>X-Forwarded-For</code> that an attacker can rotate.</li><li><strong>Limit cost, not just count:</strong> for LLM endpoints, an attacker can burn your budget with a few huge prompts (OWASP LLM Top 10 lists unbounded consumption). Token budgets per tenant close that gap.</li><li><strong>Fail-closed for expensive paths:</strong> if the limiter&#x27;s store is down, allowing unlimited calls to a paid model is a denial-of-wallet risk.</li><li><strong>ADRs for security decisions</strong> give auditors and reviewers the reasoning, not just the setting.</li></ul></div>
+<div class="callout arch"><h2>🏛 Architecture track</h2><p><strong>Today is the architecture track and Checkpoint A1.</strong> Topic: <em>documenting decisions with ADRs; first design kata</em>. Exercise: Kata #1, a distributed rate limiter (requirements, API, data model, failure modes) using the Section 8 template, plus ADR-001. Done when it&#x27;s written up in one page or less, committed, and states one tradeoff explicitly. A1 also expects a quality-attribute list for Bastion, which you already have from Day 2.</p></div>
+<section><h2><span class="ico">📚</span>Resources</h2><ul class="res"><li><a href="https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions" target="_blank" rel="noopener">Nygard, Documenting Architecture Decisions</a> — The original ADR post and template</li><li><a href="https://github.com/donnemartin/system-design-primer" target="_blank" rel="noopener">System Design Primer</a> — Rate limiting, caching and scaling background for the kata</li><li><a href="https://adr.github.io/" target="_blank" rel="noopener">adr.github.io</a> — Optional: ADR templates (including MADR) and tooling</li></ul></section>
+<section><h2><span class="ico">🃏</span>Recall quiz <span class="counter">(tap a card to flip)</span></h2><div class="quiz"><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What are the five sections of a Nygard ADR?</div><small>Q1 · tap to reveal</small></div><div class="face back"><div>Title, Status, Context, Decision, Consequences.</div><small>A1</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>You change your mind about an accepted decision. What do you do with the old ADR?</div><small>Q2 · tap to reveal</small></div><div class="face back"><div>Leave it in place, set its status to Superseded by the new ADR, and write a new ADR with the new decision and context.</div><small>A2</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What makes a decision worth an ADR?</div><small>Q3 · tap to reveal</small></div><div class="face back"><div>It&#x27;s architecturally significant: affects structure, quality attributes, dependencies or interfaces, or is expensive to reverse.</div><small>A3</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why does a fixed window counter let up to twice the limit through?</div><small>Q4 · tap to reveal</small></div><div class="face back"><div>A client can use the full limit at the end of one window and again at the start of the next, so two windows&#x27; worth passes in a short span.</div><small>A4</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why is a token bucket a good fit for LLM rate limits?</div><small>Q5 · tap to reveal</small></div><div class="face back"><div>Each request can spend a variable cost, such as its token count, and the bucket allows controlled bursts while enforcing a long-run rate.</div><small>A5</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Fail open vs fail closed when the counter store is down?</div><small>Q6 · tap to reveal</small></div><div class="face back"><div>Fail open keeps the service available but removes protection; fail closed protects the backend and budget but causes outages. Choose per path and write it in the kata and ADR.</div><small>A6</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why must the counter update be atomic in a distributed limiter?</div><small>Q7 · tap to reveal</small></div><div class="face back"><div>Otherwise two replicas can read the same count and both admit a request, letting traffic exceed the limit.</div><small>A7</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Name one tradeoff this topic forces in Bastion and how you&#x27;d decide it.</div><small>Q8 · tap to reveal</small></div><div class="face back"><div>Example: shared Redis counters (accurate, adds a network hop and a dependency) vs local per-replica counters (fast, approximate). Decide from the latency budget and how much over-admission the cost budget can tolerate.</div><small>A8</small></div></div></button></div></section>
+<section class="tomorrow"><h2><span class="ico">🔭</span>Tomorrow</h2><p>Concepts II for testing an LLM service: assertion-based evals, sync vs streaming API design, and logging tokens, latency and cost, plus decision guide G13.</p></section>
+<footer>Generated from the AI Engineering Roadmap daily plan · Day 16 of 203 · Times in Asia/Kolkata</footer>
+</div>
+<script>
+(function(){
+  var root=document.documentElement, key='bastion-theme';
+  var saved=localStorage.getItem(key);
+  var dark=saved?saved==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  root.setAttribute('data-theme',dark?'dark':'light');
+  var btn=document.getElementById('themeToggle');
+  function label(){btn.textContent=root.getAttribute('data-theme')==='dark'?'☀ Light':'☾ Dark';}
+  if(btn){label();btn.addEventListener('click',function(){var d=root.getAttribute('data-theme')==='dark'?'light':'dark';root.setAttribute('data-theme',d);localStorage.setItem(key,d);label();rerenderMermaid();});}
+  // checklist persistence
+  var day=document.getElementById('app').dataset.day;
+  var boxes=document.querySelectorAll('.check input[type=checkbox]');
+  function count(){var n=0;boxes.forEach(function(b){if(b.checked)n++;});var c=document.getElementById('checkCount');if(c)c.textContent=n+' / '+boxes.length+' done';}
+  boxes.forEach(function(b,i){var k='bastion-day-'+day+'-task-'+i;b.checked=localStorage.getItem(k)==='1';b.closest('li').classList.toggle('done',b.checked);
+    b.addEventListener('change',function(){localStorage.setItem(k,b.checked?'1':'0');b.closest('li').classList.toggle('done',b.checked);count();});});
+  count();
+  // flip cards
+  document.querySelectorAll('.card').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('flipped');c.setAttribute('aria-pressed',c.classList.contains('flipped'));});});
+  // mermaid (optional, CDN) with graceful fallback
+  var hasMermaid=document.querySelector('.mermaid');
+  window.rerenderMermaid=function(){};
+  if(!hasMermaid)return;
+  var sources=[];document.querySelectorAll('.mermaid').forEach(function(el){sources.push(el.textContent);});
+  function fallback(){document.body.classList.add('no-mermaid');}
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+  s.async=true;
+  var timer=setTimeout(fallback,6000);
+  s.onload=function(){clearTimeout(timer);try{render();}catch(e){fallback();}};
+  s.onerror=function(){clearTimeout(timer);fallback();};
+  function render(){
+    var d=root.getAttribute('data-theme')==='dark';
+    window.mermaid.initialize({startOnLoad:false,theme:d?'dark':'default',securityLevel:'strict',fontFamily:'system-ui, sans-serif'});
+    document.querySelectorAll('.mermaid').forEach(function(el,i){el.removeAttribute('data-processed');el.textContent=sources[i];});
+    window.mermaid.run({querySelector:'.mermaid'}).catch(fallback);
+  }
+  window.rerenderMermaid=function(){if(window.mermaid){try{render();}catch(e){fallback();}}};
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>

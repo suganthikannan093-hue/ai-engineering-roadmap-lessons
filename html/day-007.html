@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 7: Ship Week 1: finish the lab, prove the spend controls, fill the tracker</title>
+<script>(function(){try{var s=localStorage.getItem('bastion-theme');var d=s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();</script>
+<style>
+:root{--bg:#f7f8fb;--card:#ffffff;--ink:#1b2130;--muted:#5d6678;--line:#e3e7ef;--accent:#2f6fec;--accent-soft:#e8f0ff;
+--sec:#c0392b;--sec-soft:#fdecea;--arch:#7a4ce0;--arch-soft:#f1ebff;--ok:#1f9d63;--ok-soft:#e6f6ee;--warn:#b7791f;--warn-soft:#fff6e0;
+--code-bg:#f4f6fa;--kw:#8a2be2;--str:#0b7a3e;--num:#b35900;--com:#7b8494;--fn:#1f5fbf;--bi:#a0306a;--shadow:0 1px 2px rgba(20,30,60,.06),0 4px 14px rgba(20,30,60,.06)}
+[data-theme="dark"]{--bg:#0f131a;--card:#171c26;--ink:#e6e9f0;--muted:#9aa3b5;--line:#2a3140;--accent:#6ea0ff;--accent-soft:#1c2740;
+--sec:#ff7b6b;--sec-soft:#3a1f1d;--arch:#b597ff;--arch-soft:#271f3d;--ok:#4fd39a;--ok-soft:#173027;--warn:#f0c060;--warn-soft:#352b14;
+--code-bg:#11161f;--kw:#c792ea;--str:#a5e075;--num:#f78c6c;--com:#6b7689;--fn:#82aaff;--bi:#ff9cac;--shadow:none}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+header.hero{background:linear-gradient(135deg,var(--accent) 0%,#5b3fd6 100%);color:#fff;border-radius:18px;padding:22px 22px 18px;box-shadow:var(--shadow);position:relative}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;opacity:.95}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.18);white-space:nowrap}
+.hero h1{margin:10px 0 6px;font-size:clamp(22px,4vw,30px);line-height:1.2}
+.hero .sub{opacity:.9;font-size:14px}
+.bar{height:8px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;margin-top:12px}
+.bar>span{display:block;height:100%;background:#fff;border-radius:99px}
+.barlabel{display:flex;justify-content:space-between;font-size:12px;margin-top:4px;opacity:.9}
+.toggle{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:13px}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:16px 0;box-shadow:var(--shadow)}
+section>h2{margin:0 0 10px;font-size:19px;display:flex;align-items:center;gap:8px}
+.ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:15px}
+.tldr{border-left:5px solid var(--accent)}
+.tldr p{margin:.3em 0}
+ul.obj{margin:.4em 0 0;padding-left:1.2em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.concept{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--card)}
+.concept h3{margin:0 0 6px;font-size:16.5px}
+.concept p{margin:.45em 0}
+.concept.wide{grid-column:1/-1}
+.analogy{background:var(--warn-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+.analogy b{color:var(--warn)}
+.diagram{margin:10px 0;overflow-x:auto}
+.diagram svg{max-width:100%;height:auto;display:block}
+.diagram svg.bars{max-width:620px}
+blockquote{margin:.6em 0;padding:8px 14px;border-left:4px solid var(--line);color:var(--muted);font-style:italic}
+.mermaid-fallback{display:none}
+.no-mermaid .mermaid{display:none}
+.no-mermaid .mermaid-fallback{display:block}
+.tablewrap{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft);color:var(--ink)}
+tr:nth-child(even) td{background:color-mix(in srgb,var(--card) 94%,var(--ink) 6%)}
+.rule{background:var(--ok-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+pre.code{background:var(--code-bg);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;margin:8px 0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:.92em;background:var(--code-bg);padding:1px 5px;border-radius:5px}
+pre code{background:none;padding:0}
+.k{color:var(--kw);font-weight:600}.s{color:var(--str)}.n{color:var(--num)}.c{color:var(--com);font-style:italic}.f{color:var(--fn)}.b{color:var(--bi)}
+.check{list-style:none;padding:0;margin:6px 0}
+.check li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin:6px 0}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--ok);flex:none}
+.check li.done{background:var(--ok-soft);text-decoration:line-through;color:var(--muted)}
+.counter{font-size:13px;color:var(--muted)}
+.callout{border-radius:14px;padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout h2{margin:0 0 6px;font-size:17px}
+.callout.sec{background:var(--sec-soft);border-left:6px solid var(--sec)}
+.callout.sec h2{color:var(--sec)}
+.callout.arch{background:var(--arch-soft);border-left:6px solid var(--arch)}
+.callout.arch h2{color:var(--arch)}
+.callout p{margin:.4em 0}
+.res li{margin:5px 0}
+.quiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{perspective:1000px;cursor:pointer;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit}
+.card .inner{display:grid;transition:transform .5s;transform-style:preserve-3d;min-height:130px}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;padding:14px;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.front{background:var(--accent-soft)}
+.back{background:var(--ok-soft);transform:rotateY(180deg)}
+.face small{color:var(--muted);font-size:12px;margin-top:8px}
+.tomorrow{border-left:5px solid var(--arch)}
+footer{color:var(--muted);font-size:12.5px;text-align:center;padding:10px 0 30px}
+@media (max-width:600px){.wrap{padding:10px}section{padding:14px}header.hero{padding:18px 16px}.toggle{top:10px;right:10px}}
+@media print{.toggle{display:none}.card .inner{transform:none!important}.back{transform:none;margin-top:6px}.face{backface-visibility:visible}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" data-day="7">
+<header class="hero"><button class="toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">☾ Dark</button>
+<div class="meta"><span class="pill">Day 7 / 203</span><span class="pill">Sunday 2026-10-25</span><span class="pill">Week 1 / 29</span><span class="pill">⏱ 150 min</span><span class="pill">ship</span></div>
+<h1>Ship Week 1: finish the lab, prove the spend controls, fill the tracker</h1>
+<div class="sub">Phase 1: LLM and application foundations · Tokens, context and the API surface · Guides G1, G2, G12</div>
+<div class="bar" aria-label="Roadmap progress"><span style="width:3.45%"></span></div>
+<div class="barlabel"><span>Roadmap progress 3.4%</span><span>Ends Sun 9 May 2027</span></div></header>
+<section class="tldr"><h2><span class="ico">⚡</span>Today in 30 seconds</h2><p>Sunday is <strong>ship day</strong>. Nothing new to learn; the job is to turn this week&#x27;s work into something a reviewer could check in five minutes.</p>
+<p>You will do three things. First, <strong>finish and verify</strong> the Week 1 lab against its done-criteria (client, tests, the temperature experiment, CI green). Second, <strong>close the security lens</strong>: prove the OWASP <strong>LLM10 Unbounded Consumption</strong> controls work with six offline tests, and confirm <code>gitleaks</code> guards every commit. Third, <strong>write it down</strong>: one row in <code>docs/PROGRESS.md</code>, one entry in your brag doc, and a short weekly retro. There is no ADR this week (ADR-001 lands in Week 3), so you&#x27;ll log decisions as one-liners to turn into that ADR later.</p><p><strong>By the end of today you can:</strong></p><ul class="obj"><li>Check the Week 1 lab against written acceptance criteria and close every gap or log it</li><li>Prove the LLM10 controls (max_tokens, timeout, input cap, per-key daily cap, no secrets in git) with tests, not intentions</li><li>Fill the Week 1 tracker row, a brag-doc entry and a 3-line retro</li></ul></section>
+<section><h2><span class="ico">🧠</span>Concepts</h2><div class="grid"><article class="concept wide"><h3>1. What &#x27;shipped&#x27; means here</h3><p>A week counts as shipped when someone else could <strong>verify</strong> it without asking you anything. That means code on <code>main</code>, CI green, measurements in <code>docs/</code>, and a written record of what you decided and why.</p>
+<p>Work in this order, so the most valuable things are done even if you run out of time:</p><div class="diagram"><svg viewBox="0 0 802 238" role="img" aria-label="Ship-day order: verify first, write last." xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><g style="color:var(--muted)" font-family="system-ui,sans-serif" font-size="13"><rect x="10" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Verify lab</text><text x="95.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">done-criteria</text><line x1="182" y1="47.0" x2="210" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="214" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="299.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Prove LLM10</text><text x="299.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">6 tests</text><line x1="386" y1="47.0" x2="414" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="418" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="503.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Secrets check</text><text x="503.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">gitleaks</text><line x1="590" y1="47.0" x2="618" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="622" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="707.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Tracker</text><text x="707.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">PROGRESS.md</text><path d="M707.0,86 V104 H95.0 V120" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="10" y="124" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="157.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Brag + retro</text><text x="95.0" y="173.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">evidence</text></g></svg><div class="counter">Ship-day order: verify first, write last.</div></div></article><article class="concept wide"><h3>2. Acceptance check: the lab against its criteria</h3><p>Go row by row. Anything not green gets either a fix today or a line in <code>notes/week-01.md</code> under <em>Carry-over</em> with a date. Never leave it silently half-done.</p><div class="tablewrap"><table><thead><tr><th>Criterion</th><th>How to prove it</th><th>If it fails</th></tr></thead><tbody><tr><td>Client streams, counts tokens, costs each call</td><td>One manual <code>chat()</code> on Ollama prints tokens and a cost line</td><td>Check <code>stream_options.include_usage</code> and the tiktoken fallback</td></tr><tr><td>Retries only on 408/429/5xx with jitter</td><td><code>uv run pytest -q</code> includes the retry and no-retry tests</td><td>Re-read the Day 6 retry table</td></tr><tr><td>Temperature experiment recorded</td><td><code>docs/temperature-variance-*.md</code> committed with 3x10 runs</td><td>Run Ollama only; hosted is optional</td></tr><tr><td>Lint and format clean</td><td><code>uv run ruff check .</code> and <code>ruff format --check .</code></td><td><code>ruff check --fix</code>, then review the diff</td></tr><tr><td>CI green on <code>main</code></td><td>Actions tab shows a green tick on the last commit</td><td>Read the first red step&#x27;s log, not the last</td></tr></tbody></table></div></article><article class="concept wide"><h3>3. LLM10 Unbounded Consumption: control to proof</h3><p>OWASP&#x27;s <strong>LLM10</strong> covers attacks and bugs that burn money or capacity: huge prompts, runaway outputs, retry storms and stolen keys. A control only counts once something <strong>fails when it&#x27;s removed</strong>. That&#x27;s what today&#x27;s tests do.</p><div class="tablewrap"><table><thead><tr><th>Control</th><th>Stops</th><th>Proof you keep</th></tr></thead><tbody><tr><td>Hard <code>max_tokens</code> on every call</td><td>Runaway or adversarially long outputs</td><td>Test asserts the cap exists; client always sends it</td></tr><tr><td>Input token cap before the call</td><td>Paying for giant pasted or injected context</td><td><code>test_oversized_prompt_is_refused_before_paying</code></td></tr><tr><td>Request timeout</td><td>Hung connections tying up workers</td><td>Test asserts a bounded <code>TIMEOUT_S</code>; client passes it to httpx</td></tr><tr><td>Per-key daily spend cap</td><td>Denial of wallet, leaked key abuse, retry loops</td><td><code>test_daily_cap_blocks_the_next_call</code>, <code>test_cap_is_per_key</code></td></tr><tr><td>Provider-side budget alert</td><td>Bugs in your own guard</td><td>Screenshot or note of the console setting (not the key)</td></tr><tr><td>Keys never in git (<code>gitleaks</code>)</td><td>Key theft from repo history</td><td>Fake-key commit blocked; <code>pre-commit run --all-files</code> clean</td></tr></tbody></table></div></article><article class="concept wide"><h3>4. Defence in depth for spend</h3><p>Your guard is <strong>one</strong> layer. If it has a bug, the provider&#x27;s own budget limit is the backstop; if a key leaks, gitleaks and key rotation limit the damage. Each layer should be able to fail without the bill exploding.</p><div class="diagram"><svg viewBox="0 0 802 238" role="img" aria-label="Each layer catches what the previous one missed." xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><g style="color:var(--muted)" font-family="system-ui,sans-serif" font-size="13"><rect x="10" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">gitleaks</text><text x="95.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">key never leaks</text><line x1="182" y1="47.0" x2="210" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="214" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="299.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Input cap</text><text x="299.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">refuse big prompts</text><line x1="386" y1="47.0" x2="414" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="418" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="503.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">max_tokens + timeout</text><text x="503.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">bound each call</text><line x1="590" y1="47.0" x2="618" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="622" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="707.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Daily cap</text><text x="707.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">bound each key</text><path d="M707.0,86 V104 H95.0 V120" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="10" y="124" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="157.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Provider budget</text><text x="95.0" y="173.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">last resort</text></g></svg><div class="counter">Each layer catches what the previous one missed.</div></div><div class="analogy"><b>Analogy:</b> Like a home&#x27;s electrics: a fuse per circuit, a main breaker, and the utility&#x27;s own limit. You don&#x27;t rely on one switch.</div></article><article class="concept"><h3>5. The tracker row and the brag doc</h3><p><strong><code>docs/PROGRESS.md</code></strong> is for you: did the week happen, how long did it take, what&#x27;s carried over. Fill <em>Hours</em> honestly; it&#x27;s how you&#x27;ll know whether the 29-week plan is realistic.</p>
+<p><strong>The brag doc</strong> is for your future promotion case. Each entry needs <strong>what you built, why it matters, evidence (link), and a number</strong>. Write it today while the details are fresh; in nine months you won&#x27;t remember that temperature 0 gave 10/10 agreement.</p></article><article class="concept"><h3>6. Decisions now, ADR later</h3><p>This week you made real choices: OpenAI-compatible API first, Ollama as the free fallback, retry only on 408/429/5xx, a JSON ledger before Redis. Write each as <strong>one line with its reason</strong> in <code>notes/decisions.md</code>.</p>
+<p>In Week 3 these become <strong>ADR-001: provider abstraction and structured output strategy</strong>. Capturing them now means the ADR is editing, not archaeology.</p></article><article class="concept wide"><h3>7. A three-line retro</h3><p>Add this to <code>notes/week-01.md</code>. Five minutes, no more.</p>
+<ul><li><strong>Keep:</strong> one thing that worked (e.g. writing done-criteria on Thursday)</li><li><strong>Drop:</strong> one thing that wasted time</li><li><strong>Try:</strong> one change for Week 2 (structured outputs and tool calling)</li></ul>
+<blockquote>A retro you actually act on beats a long one you don&#x27;t.</blockquote></article></div></section>
+<section><h2><span class="ico">⚖</span>When to choose which</h2><h3>G1. Model choice</h3><p>Write your Week 1 model-tier choice for Bastion triage as a line in <code>notes/decisions.md</code>, with the variance numbers from Saturday as the reason.</p><div class="tablewrap"><table><thead><tr><th>Option</th><th>Pros</th><th>Cons</th><th>Choose when</th></tr></thead><tbody><tr><td>Frontier proprietary API</td><td>Best quality and tool use; no ops; fast to start</td><td>Per-token cost; data leaves your boundary; vendor changes and deprecations; rate limits</td><td>Quality matters most, traffic is spiky or small, or you are prototyping</td></tr><tr><td>Open-weight model, hosted by a provider</td><td>Cheaper than frontier; can switch providers; same weights self-hostable later</td><td>Quality gap on hard tasks; provider variance in quantisation and limits</td><td>Good-enough quality at lower cost; you want an exit path to self-hosting</td></tr><tr><td>Open-weight model, self-hosted</td><td>Data stays inside; fine-tunable; predictable cost at high utilisation; can run attacker models providers refuse</td><td>GPU ops burden; idle GPUs burn money; you own safety and updates</td><td>Steady high volume, data residency, custom fine-tunes, red-team attacker/judge models</td></tr><tr><td>Small or specialised model</td><td>Very low latency and cost; runs on CPU/edge or one small GPU</td><td>Narrow; brittle outside its task</td><td>High-volume narrow tasks: classification, extraction, routing, guard models, judges</td></tr><tr><td>Reasoning models</td><td>Much better at multi-step maths, code, planning, hard analysis</td><td>Slower, more expensive, sometimes over-think simple tasks</td><td>Hard reasoning, complex agents&#x27; planning steps, offline analysis; not for simple extraction or chat</td></tr><tr><td>Non-reasoning (standard) models</td><td>Fast, cheap, predictable latency</td><td>Weaker on multi-step problems</td><td>Most production calls: extraction, classification, summarisation, RAG answers</td></tr><tr><td>Routing / cascades</td><td>Large cost savings at similar quality</td><td>Router errors; more moving parts and evals</td><td>High volume with mixed difficulty; once you have evals to measure quality per route</td></tr></tbody></table></div><div class="rule"><strong>Default:</strong> start with a frontier model to set the quality ceiling, build evals, then move each step to the cheapest model that passes. Keep a provider abstraction (gateway) so swapping is a config change.</div><p class="counter">Full guide: roadmap Section 9, <a href="../roadmap.html#g1-model-choice">G1 Model choice</a>.</p><h3>G2. Prompting and context engineering</h3><p>Week 2 moves triage from a one-word zero-shot answer to <strong>structured outputs</strong>. Note in your retro where the one-word format already broke.</p><div class="tablewrap"><table><thead><tr><th>Option</th><th>Cons</th><th>Choose when</th></tr></thead><tbody><tr><td>Zero-shot instructions</td><td>Ambiguous tasks drift</td><td>Strong models on well-defined tasks</td></tr><tr><td>Few-shot examples</td><td>More tokens; examples can bias outputs</td><td>Format-sensitive or domain-specific tasks</td></tr><tr><td>Structured outputs</td><td>Schema design effort; can reduce quality if over-constrained</td><td>Any output consumed by code</td></tr></tbody></table></div><div class="rule"><strong>Default:</strong> clear zero-shot instructions plus structured outputs; add few-shot examples for format; use chaining before reaching for agents; treat context as a budget.</div><p class="counter">Full guide: roadmap Section 9, <a href="../roadmap.html#g2-prompting-and-context-engineering">G2 Prompting and context engineering</a>.</p><h3>G12. Caching</h3><p>No cache yet, on purpose. Log it in <code>notes/decisions.md</code> as a future option for repeated temperature-0 triage.</p><div class="tablewrap"><table><thead><tr><th>Option</th><th>How it works</th><th>Choose when</th></tr></thead><tbody><tr><td>Exact response cache</td><td>Key = hash(model, params, full prompt), value = response</td><td>Repeated identical calls (classification, triage of duplicates, evals)</td></tr><tr><td>Provider prompt caching</td><td>Provider caches the processed prefix of long prompts; cached input tokens billed at a discount</td><td>Long stable system prompts, tool specs, documents</td></tr></tbody></table></div><div class="rule"><strong>Rule:</strong> put stable content first (system prompt, tools, documents) and variable content last to maximise prefix-cache hits. Every cache key must include tenant ID and model version.</div><p class="counter">Full guide: roadmap Section 9, <a href="../roadmap.html#g12-caching">G12 Caching</a>.</p></section>
+<section><h2><span class="ico">🐍</span>tests/test_guard.py: prove the LLM10 controls</h2><p>Tests Day 5&#x27;s <code>guard.py</code> placed at <code>src/bastion/guard.py</code>. Runs fully offline with <code>pytest</code> (tested on Python 3.13: <code>6 passed</code>, ruff check and format clean). Each test points <code>LEDGER</code> at a temporary file, so your real spend ledger is never touched.</p><pre class="code"><code><span class="s">&quot;&quot;&quot;Prove the LLM10 controls work: offline, no API key, no network.&quot;&quot;&quot;</span>
+
+<span class="k">import</span> json
+
+<span class="k">import</span> pytest
+
+<span class="k">from</span> bastion <span class="k">import</span> guard
+
+
+@pytest.fixture(autouse=<span class="k">True</span>)
+<span class="k">def</span> <span class="f">isolated_ledger</span>(tmp_path, monkeypatch):
+    <span class="c"># Each test gets its own empty spend ledger.</span>
+    monkeypatch.<span class="b">setattr</span>(guard, <span class="s">&quot;LEDGER&quot;</span>, tmp_path / <span class="s">&quot;spend.json&quot;</span>)
+
+
+<span class="k">def</span> <span class="f">test_small_call_is_allowed</span>():
+    guard.preflight(<span class="s">&quot;dev-key&quot;</span>, <span class="n">1_200</span>)  <span class="c"># no exception means allowed</span>
+
+
+<span class="k">def</span> <span class="f">test_oversized_prompt_is_refused_before_paying</span>():
+    <span class="k">with</span> pytest.raises(guard.BudgetExceeded, <span class="k">match</span>=<span class="s">&quot;input&quot;</span>):
+        guard.preflight(<span class="s">&quot;dev-key&quot;</span>, guard.MAX_INPUT_TOKENS + <span class="n">1</span>)
+
+
+<span class="k">def</span> <span class="f">test_daily_cap_blocks_the_next_call</span>():
+    guard.LEDGER.write_text(
+        json.dumps({<span class="s">&quot;dev-key&quot;</span>: {guard._today(): guard.DAILY_CAP_USD - <span class="n">0.0001</span>}})
+    )
+    <span class="k">with</span> pytest.raises(guard.BudgetExceeded, <span class="k">match</span>=<span class="s">&quot;daily cap&quot;</span>):
+        guard.preflight(<span class="s">&quot;dev-key&quot;</span>, <span class="n">1_000</span>)
+
+
+<span class="k">def</span> <span class="f">test_cap_is_per_key</span>():
+    guard.LEDGER.write_text(
+        json.dumps({<span class="s">&quot;dev-key&quot;</span>: {guard._today(): guard.DAILY_CAP_USD}})
+    )
+    guard.preflight(<span class="s">&quot;other-key&quot;</span>, <span class="n">1_000</span>)  <span class="c"># a different key still has budget</span>
+
+
+<span class="k">def</span> <span class="f">test_record_accumulates_real_usage</span>():
+    guard.record(<span class="s">&quot;dev-key&quot;</span>, <span class="n">1_000_000</span>, <span class="n">0</span>)
+    guard.record(<span class="s">&quot;dev-key&quot;</span>, <span class="n">0</span>, <span class="n">1_000_000</span>)
+    spent = json.loads(guard.LEDGER.read_text())[<span class="s">&quot;dev-key&quot;</span>][guard._today()]
+    <span class="k">assert</span> spent == pytest.approx(
+        guard.PRICE_PER_MTOK[<span class="s">&quot;in&quot;</span>] + guard.PRICE_PER_MTOK[<span class="s">&quot;out&quot;</span>]
+    )
+
+
+<span class="k">def</span> <span class="f">test_output_and_timeout_caps_are_set</span>():
+    <span class="k">assert</span> <span class="n">0</span> &lt; guard.MAX_OUTPUT_TOKENS &lt;= <span class="n">4_096</span>
+    <span class="k">assert</span> <span class="n">0</span> &lt; guard.TIMEOUT_S &lt;= <span class="n">120</span></code></pre><p>Each test removes one assumption: an oversized prompt is refused <strong>before</strong> you pay, the cap is enforced <strong>per key</strong> (one leaked key can&#x27;t drain another&#x27;s budget), and <code>record()</code> adds the provider&#x27;s real usage. If you ever loosen a limit by accident, CI goes red. Run it with <code>uv run pytest -q tests/test_guard.py</code>.</p></section>
+<section><h2><span class="ico">🐍</span>docs/PROGRESS.md row and a brag-doc entry</h2><p>Templates to copy. The values in the example row are placeholders: put your own hours, outcome and numbers in.</p><pre class="code"><code><span class="c"># docs/PROGRESS.md  (update every Sunday)</span>
+
+| Week | Dates | Phase | AI outcome | Arch outcome | Guides | Done? | Hours | Notes |
+|---|---|---|---|---|---|---|---|---|
+| <span class="n">1</span> | <span class="n">19</span>-<span class="n">25</span> Oct <span class="n">2026</span> | <span class="n">1</span> | Provider client + spend caps | Quality attributes <span class="b">list</span> | G1 G2 G12 | yes / partial | <span class="n">11.5</span> | e.g. temp <span class="n">0</span> agreed <span class="n">10</span>/<span class="n">10</span> on Ollama; hosted run skipped |
+
+<span class="c"># docs/BRAG.md  (one entry per shipped thing, newest first)</span>
+
+<span class="c">## 2026-10-25 - Cost-safe LLM client for Bastion</span>
+- What: provider-agnostic streaming client <span class="k">with</span> retries, token counts <span class="k">and</span> cost per call
+- Why it matters: every later feature calls one bounded, tested place
+- Evidence: PR/commit link, `<span class="n">10</span> passed` + `<span class="n">6</span> passed` <span class="k">in</span> CI, docs/temperature-variance-ollama.md
+- Number: worst-<span class="k">case</span> spend per key capped at $<span class="n">2.00</span>/day (illustrative cap)
+- Skill shown: LLM10 controls, offline testing, measurement before opinion</code></pre><p>Keep both files in the repo so they&#x27;re versioned with the work they describe. The brag entry links to evidence instead of describing it.</p></section>
+<section><h2><span class="ico">✅</span>Hands-on task</h2><p>About 150 minutes. Verify the lab and fix gaps (about 50 min). Add <code>test_guard.py</code>, run gitleaks across the repo and confirm the provider budget (about 40 min). Tracker, brag doc, decisions and retro (about 35 min). Flip the cards and commit (about 25 min). If you&#x27;re short on time, do sections 2 and 3 and the tracker row; the rest can be a 10-minute job tomorrow.</p><ul class="check"><li><input type="checkbox" id="t0" aria-label="task 1"><label for="t0">Go through the acceptance table; fix each gap or log it under <em>Carry-over</em> in <code>notes/week-01.md</code></label></li><li><input type="checkbox" id="t1" aria-label="task 2"><label for="t1">Add <code>tests/test_guard.py</code>; <code>uv run pytest -q</code> shows all tests passing (10 client + 6 guard)</label></li><li><input type="checkbox" id="t2" aria-label="task 3"><label for="t2">Confirm the client sends <code>max_tokens</code> and passes the timeout on every request</label></li><li><input type="checkbox" id="t3" aria-label="task 4"><label for="t3"><code>pre-commit run --all-files</code> is clean, and gitleaks still blocks a fake-key commit</label></li><li><input type="checkbox" id="t4" aria-label="task 5"><label for="t4">Provider console: a budget limit or alert is set (note it, never the key)</label></li><li><input type="checkbox" id="t5" aria-label="task 6"><label for="t5">Fill the Week 1 row in <code>docs/PROGRESS.md</code>, with honest hours</label></li><li><input type="checkbox" id="t6" aria-label="task 7"><label for="t6">Add a brag-doc entry with an evidence link and one number</label></li><li><input type="checkbox" id="t7" aria-label="task 8"><label for="t7">Write this week&#x27;s decisions as one-liners in <code>notes/decisions.md</code> (input for ADR-001)</label></li><li><input type="checkbox" id="t8" aria-label="task 9"><label for="t8">Write the three-line retro; push and see CI go green</label></li></ul><div class="counter" id="checkCount"></div></section>
+<div class="callout sec"><h2>🛡 Security lens</h2><p><strong>A control you haven&#x27;t tested is a hope.</strong> The LLM10 tests are your first <em>security regression tests</em>: if anyone (including you, at 11pm) raises a limit or removes the cap, CI fails. Keep two more habits from today:</p>
+<ul><li><strong>Never put real keys in fixtures or logs.</strong> Tests use fake key IDs like <code>dev-key</code>.</li><li><strong>Rotate any key that touched a file</strong>, even one you deleted, because git history keeps it. gitleaks scans history too: <code>gitleaks git .</code> (v8.19+) or <code>gitleaks detect</code> on older versions.</li></ul></div>
+<div class="callout arch"><h2>🏛 Architecture track</h2><p>This week&#x27;s architecture track (Tuesday 2026-10-20): <strong>What architects do; quality attributes (scalability, availability, latency, security, cost, operability)</strong>. Exercise: List the top 5 quality attributes for Bastion triage and rank them; note one tradeoff between two of them.</p></div>
+<section><h2><span class="ico">📚</span>Resources</h2><ul class="res"><li><a href="https://genai.owasp.org/llm-top-10/" target="_blank" rel="noopener">OWASP Top 10 for LLM Applications 2025</a> — Overview and the LLM10 page</li><li><a href="https://genai.owasp.org/llmrisk/llm102025-unbounded-consumption/" target="_blank" rel="noopener">OWASP LLM10: Unbounded Consumption</a> — Attack examples and mitigations</li><li><a href="https://github.com/gitleaks/gitleaks" target="_blank" rel="noopener">gitleaks</a> — Pre-commit hook and history scans</li><li><a href="https://docs.pytest.org/en/stable/how-to/monkeypatch.html" target="_blank" rel="noopener">pytest: monkeypatch and tmp_path</a> — How the tests isolate the ledger</li></ul></section>
+<section><h2><span class="ico">🃏</span>Recall quiz <span class="counter">(tap a card to flip)</span></h2><div class="quiz"><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What is the one-sentence outcome of Week 1?</div><small>Q1 · tap to reveal</small></div><div class="face back"><div>Bastion has a tested, provider-agnostic LLM client that streams, counts tokens, costs each call, retries safely and can&#x27;t exceed a per-key daily spend cap, with the temperature variance measured and recorded.</div><small>A1</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What would a reviewer challenge first?</div><small>Q2 · tap to reveal</small></div><div class="face back"><div>Whether the spend controls really hold: the guard is a single-process JSON file, so two workers could both pass preflight. The answer: fine for a lab, and the provider budget is the backstop; move the ledger to a shared store like Redis with atomic increments before running more than one process.</div><small>A2</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why does the input cap run <em>before</em> the API call?</div><small>Q3 · tap to reveal</small></div><div class="face back"><div>Input tokens are billed as soon as the request is sent. Refusing an oversized prompt locally costs nothing; refusing it after the call means you&#x27;ve already paid.</div><small>A3</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why test that the cap is per key?</div><small>Q4 · tap to reveal</small></div><div class="face back"><div>So one leaked or misbehaving key can only burn its own budget. A global cap would let one caller deny service to everyone else.</div><small>A4</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>You deleted a file containing a key and committed. Are you safe?</div><small>Q5 · tap to reveal</small></div><div class="face back"><div>No. The key is still in git history. Rotate the key, then scan history with gitleaks; rewriting history is optional cleanup, rotation is the fix.</div><small>A5</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why write decisions as one-liners now instead of a full ADR?</div><small>Q6 · tap to reveal</small></div><div class="face back"><div>The reasons are freshest now, and ADR-001 in Week 3 can be assembled from them. It keeps the ADR habit without stalling ship day.</div><small>A6</small></div></div></button></div></section>
+<section class="tomorrow"><h2><span class="ico">🔭</span>Tomorrow</h2><p>Monday starts <strong>Week 2: structured outputs, tool calling and prompting</strong>. You&#x27;ll make the model return JSON that a Pydantic schema validates, instead of trusting free text.</p></section>
+<footer>Generated from the AI Engineering Roadmap daily plan · Day 7 of 203 · Times in Asia/Kolkata</footer>
+</div>
+<script>
+(function(){
+  var root=document.documentElement, key='bastion-theme';
+  var saved=localStorage.getItem(key);
+  var dark=saved?saved==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  root.setAttribute('data-theme',dark?'dark':'light');
+  var btn=document.getElementById('themeToggle');
+  function label(){btn.textContent=root.getAttribute('data-theme')==='dark'?'☀ Light':'☾ Dark';}
+  if(btn){label();btn.addEventListener('click',function(){var d=root.getAttribute('data-theme')==='dark'?'light':'dark';root.setAttribute('data-theme',d);localStorage.setItem(key,d);label();rerenderMermaid();});}
+  // checklist persistence
+  var day=document.getElementById('app').dataset.day;
+  var boxes=document.querySelectorAll('.check input[type=checkbox]');
+  function count(){var n=0;boxes.forEach(function(b){if(b.checked)n++;});var c=document.getElementById('checkCount');if(c)c.textContent=n+' / '+boxes.length+' done';}
+  boxes.forEach(function(b,i){var k='bastion-day-'+day+'-task-'+i;b.checked=localStorage.getItem(k)==='1';b.closest('li').classList.toggle('done',b.checked);
+    b.addEventListener('change',function(){localStorage.setItem(k,b.checked?'1':'0');b.closest('li').classList.toggle('done',b.checked);count();});});
+  count();
+  // flip cards
+  document.querySelectorAll('.card').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('flipped');c.setAttribute('aria-pressed',c.classList.contains('flipped'));});});
+  // mermaid (optional, CDN) with graceful fallback
+  var hasMermaid=document.querySelector('.mermaid');
+  window.rerenderMermaid=function(){};
+  if(!hasMermaid)return;
+  var sources=[];document.querySelectorAll('.mermaid').forEach(function(el){sources.push(el.textContent);});
+  function fallback(){document.body.classList.add('no-mermaid');}
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+  s.async=true;
+  var timer=setTimeout(fallback,6000);
+  s.onload=function(){clearTimeout(timer);try{render();}catch(e){fallback();}};
+  s.onerror=function(){clearTimeout(timer);fallback();};
+  function render(){
+    var d=root.getAttribute('data-theme')==='dark';
+    window.mermaid.initialize({startOnLoad:false,theme:d?'dark':'default',securityLevel:'strict',fontFamily:'system-ui, sans-serif'});
+    document.querySelectorAll('.mermaid').forEach(function(el,i){el.removeAttribute('data-processed');el.textContent=sources[i];});
+    window.mermaid.run({querySelector:'.mermaid'}).catch(fallback);
+  }
+  window.rerenderMermaid=function(){if(window.mermaid){try{render();}catch(e){fallback();}}};
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>

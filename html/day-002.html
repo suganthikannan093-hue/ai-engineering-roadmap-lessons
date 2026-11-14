@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 2: What architects do, and quality attributes you can measure</title>
+<script>(function(){try{var s=localStorage.getItem('bastion-theme');var d=s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();</script>
+<style>
+:root{--bg:#f7f8fb;--card:#ffffff;--ink:#1b2130;--muted:#5d6678;--line:#e3e7ef;--accent:#2f6fec;--accent-soft:#e8f0ff;
+--sec:#c0392b;--sec-soft:#fdecea;--arch:#7a4ce0;--arch-soft:#f1ebff;--ok:#1f9d63;--ok-soft:#e6f6ee;--warn:#b7791f;--warn-soft:#fff6e0;
+--code-bg:#f4f6fa;--kw:#8a2be2;--str:#0b7a3e;--num:#b35900;--com:#7b8494;--fn:#1f5fbf;--bi:#a0306a;--shadow:0 1px 2px rgba(20,30,60,.06),0 4px 14px rgba(20,30,60,.06)}
+[data-theme="dark"]{--bg:#0f131a;--card:#171c26;--ink:#e6e9f0;--muted:#9aa3b5;--line:#2a3140;--accent:#6ea0ff;--accent-soft:#1c2740;
+--sec:#ff7b6b;--sec-soft:#3a1f1d;--arch:#b597ff;--arch-soft:#271f3d;--ok:#4fd39a;--ok-soft:#173027;--warn:#f0c060;--warn-soft:#352b14;
+--code-bg:#11161f;--kw:#c792ea;--str:#a5e075;--num:#f78c6c;--com:#6b7689;--fn:#82aaff;--bi:#ff9cac;--shadow:none}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+header.hero{background:linear-gradient(135deg,var(--accent) 0%,#5b3fd6 100%);color:#fff;border-radius:18px;padding:22px 22px 18px;box-shadow:var(--shadow);position:relative}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;opacity:.95}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.18);white-space:nowrap}
+.hero h1{margin:10px 0 6px;font-size:clamp(22px,4vw,30px);line-height:1.2}
+.hero .sub{opacity:.9;font-size:14px}
+.bar{height:8px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;margin-top:12px}
+.bar>span{display:block;height:100%;background:#fff;border-radius:99px}
+.barlabel{display:flex;justify-content:space-between;font-size:12px;margin-top:4px;opacity:.9}
+.toggle{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:13px}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:16px 0;box-shadow:var(--shadow)}
+section>h2{margin:0 0 10px;font-size:19px;display:flex;align-items:center;gap:8px}
+.ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:15px}
+.tldr{border-left:5px solid var(--accent)}
+.tldr p{margin:.3em 0}
+ul.obj{margin:.4em 0 0;padding-left:1.2em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.concept{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--card)}
+.concept h3{margin:0 0 6px;font-size:16.5px}
+.concept p{margin:.45em 0}
+.concept.wide{grid-column:1/-1}
+.analogy{background:var(--warn-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+.analogy b{color:var(--warn)}
+.diagram{margin:10px 0;overflow-x:auto}
+.diagram svg{max-width:100%;height:auto;display:block}
+.diagram svg.bars{max-width:620px}
+blockquote{margin:.6em 0;padding:8px 14px;border-left:4px solid var(--line);color:var(--muted);font-style:italic}
+.mermaid-fallback{display:none}
+.no-mermaid .mermaid{display:none}
+.no-mermaid .mermaid-fallback{display:block}
+.tablewrap{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft);color:var(--ink)}
+tr:nth-child(even) td{background:color-mix(in srgb,var(--card) 94%,var(--ink) 6%)}
+.rule{background:var(--ok-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+pre.code{background:var(--code-bg);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;margin:8px 0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:.92em;background:var(--code-bg);padding:1px 5px;border-radius:5px}
+pre code{background:none;padding:0}
+.k{color:var(--kw);font-weight:600}.s{color:var(--str)}.n{color:var(--num)}.c{color:var(--com);font-style:italic}.f{color:var(--fn)}.b{color:var(--bi)}
+.check{list-style:none;padding:0;margin:6px 0}
+.check li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin:6px 0}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--ok);flex:none}
+.check li.done{background:var(--ok-soft);text-decoration:line-through;color:var(--muted)}
+.counter{font-size:13px;color:var(--muted)}
+.callout{border-radius:14px;padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout h2{margin:0 0 6px;font-size:17px}
+.callout.sec{background:var(--sec-soft);border-left:6px solid var(--sec)}
+.callout.sec h2{color:var(--sec)}
+.callout.arch{background:var(--arch-soft);border-left:6px solid var(--arch)}
+.callout.arch h2{color:var(--arch)}
+.callout p{margin:.4em 0}
+.res li{margin:5px 0}
+.quiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{perspective:1000px;cursor:pointer;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit}
+.card .inner{display:grid;transition:transform .5s;transform-style:preserve-3d;min-height:130px}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;padding:14px;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.front{background:var(--accent-soft)}
+.back{background:var(--ok-soft);transform:rotateY(180deg)}
+.face small{color:var(--muted);font-size:12px;margin-top:8px}
+.tomorrow{border-left:5px solid var(--arch)}
+footer{color:var(--muted);font-size:12.5px;text-align:center;padding:10px 0 30px}
+@media (max-width:600px){.wrap{padding:10px}section{padding:14px}header.hero{padding:18px 16px}.toggle{top:10px;right:10px}}
+@media print{.toggle{display:none}.card .inner{transform:none!important}.back{transform:none;margin-top:6px}.face{backface-visibility:visible}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" data-day="2">
+<header class="hero"><button class="toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">☾ Dark</button>
+<div class="meta"><span class="pill">Day 2 / 203</span><span class="pill">Tuesday 2026-10-20</span><span class="pill">Week 1 / 29</span><span class="pill">⏱ 120 min</span><span class="pill">arch</span></div>
+<h1>What architects do, and quality attributes you can measure</h1>
+<div class="sub">Phase 1: LLM and application foundations · Tokens, context and the API surface</div>
+<div class="bar" aria-label="Roadmap progress"><span style="width:0.99%"></span></div>
+<div class="barlabel"><span>Roadmap progress 1.0%</span><span>Ends Sun 9 May 2027</span></div></header>
+<section class="tldr"><h2><span class="ico">⚡</span>Today in 30 seconds</h2><p>Architecture is the set of decisions that are <strong>expensive to change later</strong>. Most of them come from trade-offs between <strong>quality attributes</strong>, the &quot;-ilities&quot; such as availability, latency, scalability, security, cost and operability.</p>
+<p>Today you learn how architects frame those trade-offs, how to make each attribute <strong>measurable</strong>, and you rank the top five for Bastion&#x27;s triage service. That ranking feeds ADR-001 and Milestone M1.</p><p><strong>By the end of today you can:</strong></p><ul class="obj"><li>Describe what an architect is expected to do, beyond drawing boxes</li><li>Explain the two laws of software architecture from Fundamentals of Software Architecture</li><li>Turn six quality attributes into measurable targets (SLO, p95/p99, cost per request, MTTR)</li><li>Rank the top 5 quality attributes for Bastion triage and state one trade-off</li></ul></section>
+<section><h2><span class="ico">🧠</span>Concepts</h2><div class="grid"><article class="concept wide"><h3>1. What architects actually do</h3><p>Richards &amp; Ford (<em>Fundamentals of Software Architecture</em>) list eight expectations of an architect:</p>
+<ul><li>make architecture decisions</li><li>continually analyse the architecture</li><li>keep current with trends</li><li>ensure decisions are followed</li><li>have diverse exposure and experience</li><li>know the business domain</li><li>have interpersonal skills</li><li>understand and navigate politics</li></ul>
+<p>The deliverable is not a diagram. It is <strong>good decisions, written down with their reasons</strong>, that the team can follow and revisit. For a Principal DevOps promotion this is the visible shift from &quot;built it&quot; to &quot;decided how we build it, and why&quot;.</p><div class="diagram"><pre class="mermaid">flowchart LR
+  R[Business drivers and constraints] --&gt; Q[Quality attributes ranked and measurable]
+  Q --&gt; S[Style and structure choices]
+  S --&gt; D[Decisions and trade-offs]
+  D --&gt; A[ADRs]
+  A --&gt; F[Fitness functions / SLOs]
+  F --&gt;|feedback| Q</pre><div class="mermaid-fallback"><p class="counter">Diagram source (Mermaid CDN unavailable):</p><pre class="code">flowchart LR
+  R[Business drivers and constraints] --&gt; Q[Quality attributes ranked and measurable]
+  Q --&gt; S[Style and structure choices]
+  S --&gt; D[Decisions and trade-offs]
+  D --&gt; A[ADRs]
+  A --&gt; F[Fitness functions / SLOs]
+  F --&gt;|feedback| Q</pre></div><div class="counter">How quality attributes flow into the decisions you record.</div></div></article><article class="concept wide"><h3>2. The laws: trade-offs and &#x27;why&#x27;</h3><p><strong>First law:</strong> <em>everything in software architecture is a trade-off.</em> If you think you have found something that is not a trade-off, you probably have not found the trade-off yet.</p>
+<p><strong>Second law:</strong> <em>why is more important than how.</em> Anyone can read the code later to see <em>how</em>. The <em>why</em> (constraints, options rejected, assumptions) is lost unless you write it down. That is what ADRs are for.</p>
+<p>The book also tells you to aim for the <strong>least-worst architecture</strong>, not the best one, and not to support every characteristic. Each one you add brings design cost and complexity, so pick a few that really drive the design.</p><div class="analogy"><b>Analogy:</b> A car spec sheet. You can&#x27;t have the top speed of a sports car, the boot of an estate and the fuel economy of a hatchback. The architect&#x27;s job is to say which matters most for <em>this</em> trip, and to write down why.</div></article><article class="concept wide"><h3>3. Architecture characteristics</h3><p>A requirement is an <strong>architecture characteristic</strong> if it is a non-domain design consideration, it shapes the structure, and it is critical to success. FoSA groups them as:</p>
+<ul><li><strong>Operational:</strong> availability, performance, scalability, recoverability</li><li><strong>Structural:</strong> modularity, maintainability, deployability, extensibility</li><li><strong>Cross-cutting:</strong> security, privacy, accessibility, legal</li></ul>
+<p>Some are <strong>explicit</strong> (in the requirements) and some are <strong>implicit</strong> (nobody asks for security or operability, but you are blamed when they fail). Your job is to surface the implicit ones.</p><div class="tablewrap"><table><thead><tr><th>Attribute</th><th>Vague wording</th><th>Measurable form (use this)</th></tr></thead><tbody><tr><td>Availability</td><td>&quot;always up&quot;</td><td>≥99.9% of <code>POST /v1/triage</code> requests succeed per 30 days (SLO); error budget 43.2 min</td></tr><tr><td>Latency</td><td>&quot;fast&quot;</td><td>p95 time-to-verdict &lt; 4 s; p99 &lt; 10 s; streaming TTFT p95 &lt; 1 s</td></tr><tr><td>Scalability</td><td>&quot;handles load&quot;</td><td>Sustains 50 req/s for 10 min with p95 within SLO; scales out without code change</td></tr><tr><td>Security</td><td>&quot;secure&quot;</td><td>All OWASP LLM Top 10 risks threat-modelled; 0 high findings open &gt; 14 days; no secrets in git</td></tr><tr><td>Cost</td><td>&quot;cheap&quot;</td><td>≤ $0.002 per triage at p50 token usage; per-key daily cap enforced</td></tr><tr><td>Operability</td><td>&quot;easy to run&quot;</td><td>MTTR &lt; 30 min; every alert has a runbook; deploy in &lt; 10 min with rollback</td></tr></tbody></table></div></article><article class="concept wide"><h3>4. Quality-attribute scenarios and the nines</h3><p><em>Software Architecture in Practice</em> (Bass, Clements, Kazman) writes each attribute as a <strong>scenario</strong> with six parts: source, stimulus, artifact, environment, response and response measure. For example:</p>
+<blockquote><em>A burst of 500 transcripts (stimulus) from the red-team harness (source) hits the triage API (artifact) during normal operation (environment). The requests are queued or served, not dropped (response), and p95 stays under 4 s (measure).</em></blockquote>
+<p>Availability is usually written in &quot;nines&quot;. Each extra nine cuts allowed downtime by 10×. For serial dependencies, <strong>availabilities multiply</strong>, so a chain is always weaker than its weakest link.</p><div class="diagram"><svg class="bars" viewBox="0 0 560 130" role="img" aria-label="Computed by today&#x27;s code: three serial hops at 99.95%, 99.9% and 99.95% give 99.80%. Adding a fallback LLM provider (99.5%) raises the path to 99.90%." xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif" font-size="13"><text x="162" y="23" text-anchor="end" fill="var(--ink)">API alone</text><rect x="170" y="9" width="310.0" height="20" rx="5" fill="var(--accent)"/><text x="486.0" y="23" fill="var(--muted)">99.95%</text><text x="162" y="53" text-anchor="end" fill="var(--ink)">LLM provider</text><rect x="170" y="39" width="309.8" height="20" rx="5" fill="var(--accent)"/><text x="485.8" y="53" fill="var(--muted)">99.9%</text><text x="162" y="83" text-anchor="end" fill="var(--ink)">Serial path</text><rect x="170" y="69" width="309.5" height="20" rx="5" fill="var(--accent)"/><text x="485.5" y="83" fill="var(--muted)">99.8%</text><text x="162" y="113" text-anchor="end" fill="var(--ink)">With fallback</text><rect x="170" y="99" width="309.8" height="20" rx="5" fill="var(--accent)"/><text x="485.8" y="113" fill="var(--muted)">99.9%</text></svg><div class="counter">Computed by today&#x27;s code: three serial hops at 99.95%, 99.9% and 99.95% give 99.80%. Adding a fallback LLM provider (99.5%) raises the path to 99.90%.</div></div><div class="tablewrap"><table><thead><tr><th>SLO</th><th>Downtime / year</th><th>Downtime / 30 days</th></tr></thead><tbody><tr><td>99%</td><td>87.6 h (≈3.65 days)</td><td>7.2 h</td></tr><tr><td>99.5%</td><td>43.8 h</td><td>3.6 h</td></tr><tr><td>99.9%</td><td>8.76 h</td><td>43.2 min</td></tr><tr><td>99.95%</td><td>4.38 h</td><td>21.6 min</td></tr><tr><td>99.99%</td><td>52.6 min</td><td>4.3 min</td></tr></tbody></table></div></article></div></section>
+<section><h2><span class="ico">⚖</span>When to choose which</h2><h3>G19. Architecture styles</h3><p>A preview. The characteristics you rank today decide which style fits. You will use this table properly in Weeks 9, 12 and 27.</p><div class="tablewrap"><table><thead><tr><th>Style</th><th>Pros</th><th>Cons</th><th>Choose when</th></tr></thead><tbody><tr><td>Layered / modular monolith</td><td>Simple ops, easy refactor, strong consistency</td><td>Scaling and team autonomy limits</td><td>Early Bastion; most internal tools</td></tr><tr><td>Microservices</td><td>Team autonomy, selective scale</td><td>Distributed complexity, data coupling</td><td>Clear bounded contexts and platform maturity</td></tr><tr><td>Event-driven</td><td>Loose coupling, resilience</td><td>Eventual consistency, harder tracing</td><td>Fan-out, audit streams, async AI jobs</td></tr><tr><td>CQRS</td><td>Optimise each side</td><td>Two models to keep in sync</td><td>Read-heavy dashboards vs write-heavy command paths</td></tr><tr><td>Event sourcing</td><td>Full history, rebuildable projections</td><td>Complexity, PII retention challenges</td><td>Audit-critical domains</td></tr><tr><td>Serverless / FaaS</td><td>No servers for spiky loads</td><td>Cold starts, time limits, vendor coupling</td><td>Spiky, short tasks (webhooks, light transforms)</td></tr><tr><td>Cell-based</td><td>Blast-radius control</td><td>Routing and more infra</td><td>Multi-tenant platforms at serious scale</td></tr></tbody></table></div><div class="rule"><strong>Default:</strong> modular monolith with clear modules early; extract inference, gateway and sandbox as separate services when scaling or isolation demands it; use cells for tenant blast-radius later.</div><p class="counter">Full guide: roadmap Section 9, <a href="../roadmap.html#g19-architecture-styles">G19 Architecture styles</a>.</p></section>
+<section><h2><span class="ico">🐍</span>Error budgets, composite availability and why percentiles beat averages</h2><p>Pure Python, no dependencies. Use it to sanity-check any SLO you write.</p><pre class="code"><code><span class="c"># day2_availability.py  -  error budgets and composite availability</span>
+<span class="k">from</span> math <span class="k">import</span> ceil, prod
+
+HOURS_PER_YEAR = <span class="n">365</span> * <span class="n">24</span>
+MIN_PER_30D = <span class="n">30</span> * <span class="n">24</span> * <span class="n">60</span>
+
+<span class="k">def</span> <span class="f">downtime</span>(slo: <span class="b">float</span>) -&gt; <span class="b">str</span>:
+    bad = <span class="n">1</span> - slo
+    <span class="k">return</span> <span class="s">f&quot;</span>{slo:<span class="s">.3%</span>}<span class="s">: </span>{bad * HOURS_PER_YEAR:<span class="s">6.2f</span>}<span class="s"> h/year, </span>{bad * MIN_PER_30D:<span class="s">6.1f</span>}<span class="s"> min per 30 days</span><span class="s">&quot;</span>
+
+<span class="k">for</span> slo <span class="k">in</span> (<span class="n">0.99</span>, <span class="n">0.995</span>, <span class="n">0.999</span>, <span class="n">0.9995</span>, <span class="n">0.9999</span>):
+    <span class="b">print</span>(downtime(slo))
+
+<span class="c"># Serial dependencies: the request fails if ANY hop fails, so availabilities multiply.</span>
+triage_path = {
+    <span class="s">&quot;ingress + API&quot;</span>: <span class="n">0.9995</span>,
+    <span class="s">&quot;LLM provider&quot;</span>: <span class="n">0.999</span>,
+    <span class="s">&quot;result store&quot;</span>: <span class="n">0.9995</span>,
+}
+serial = prod(triage_path.values())
+<span class="b">print</span>(<span class="s">f&quot;</span><span class="s">serial triage path: </span>{serial:<span class="s">.4%</span>}<span class="s">&quot;</span>)          <span class="c"># lower than every single part</span>
+
+<span class="c"># Redundancy: two independent LLM providers behind a fallback route.</span>
+<span class="k">def</span> <span class="f">parallel</span>(*a: <span class="b">float</span>) -&gt; <span class="b">float</span>:
+    <span class="k">return</span> <span class="n">1</span> - prod(<span class="n">1</span> - x <span class="k">for</span> x <span class="k">in</span> a)
+
+with_fallback = <span class="n">0.9995</span> * parallel(<span class="n">0.999</span>, <span class="n">0.995</span>) * <span class="n">0.9995</span>
+<span class="b">print</span>(<span class="s">f&quot;</span><span class="s">with provider fallback: </span>{with_fallback:<span class="s">.4%</span>}<span class="s">&quot;</span>)
+
+<span class="c"># Latency percentiles: averages hide the tail your users feel.</span>
+latencies_ms = <span class="b">sorted</span>([<span class="n">420</span>, <span class="n">380</span>, <span class="n">450</span>, <span class="n">400</span>, <span class="n">2900</span>, <span class="n">410</span>, <span class="n">395</span>, <span class="n">430</span>, <span class="n">405</span>, <span class="n">6100</span>])
+<span class="k">def</span> <span class="f">pct</span>(xs, p):  <span class="c"># nearest-rank percentile</span>
+    k = <span class="b">max</span>(<span class="n">0</span>, ceil(p / <span class="n">100</span> * <span class="b">len</span>(xs)) - <span class="n">1</span>)
+    <span class="k">return</span> xs[k]
+<span class="b">print</span>(<span class="s">&quot;mean&quot;</span>, <span class="b">sum</span>(latencies_ms) / <span class="b">len</span>(latencies_ms), <span class="s">&quot;p50&quot;</span>, pct(latencies_ms, <span class="n">50</span>), <span class="s">&quot;p90&quot;</span>, pct(latencies_ms, <span class="n">90</span>))</code></pre><p>99.9% allows 8.76 h per year or 43.2 min per 30 days. The serial path is 99.80%, below every component. A fallback provider brings it back to 99.90%, which is the architectural argument for the LiteLLM fallback route in Week 23. With two slow outliers, the mean (1,229 ms) describes no real user; p50 is 410 ms and p90 2,900 ms. Always set SLOs on percentiles.</p></section>
+<section><h2><span class="ico">✅</span>Hands-on task</h2><p>About 2 hours. Read the FoSA chapters on architectural thinking and architecture characteristics (≈75 min). Then do the exercise (≈45 min) in <code>bastion/docs/architecture/quality-attributes.md</code>.</p><ul class="check"><li><input type="checkbox" id="t0" aria-label="task 1"><label for="t0">Read FoSA 2e: architectural thinking + architecture characteristics chapters</label></li><li><input type="checkbox" id="t1" aria-label="task 2"><label for="t1">Run <code>day2_availability.py</code> and check the nines table by hand for 99.9%</label></li><li><input type="checkbox" id="t2" aria-label="task 3"><label for="t2">List candidate quality attributes for Bastion triage (aim for 8-10, including implicit ones)</label></li><li><input type="checkbox" id="t3" aria-label="task 4"><label for="t3">Rank the top 5 and write a measurable target for each (use the table above as a pattern)</label></li><li><input type="checkbox" id="t4" aria-label="task 5"><label for="t4">Write one quality-attribute scenario (six parts) for your #1 attribute</label></li><li><input type="checkbox" id="t5" aria-label="task 6"><label for="t5">Note one explicit trade-off between two attributes (e.g. cost vs latency: cheap model + escalation vs one frontier model)</label></li><li><input type="checkbox" id="t6" aria-label="task 7"><label for="t6">Commit; you will reuse this in ADR-001 and the Week 3 kata</label></li></ul><div class="counter" id="checkCount"></div></section>
+<div class="callout sec"><h2>🛡 Security lens</h2><p>Security is a <strong>cross-cutting</strong> characteristic, and the one most often left implicit. For a red-team triage service, two security attributes usually rank in the top 5:</p>
+<ul><li><strong>Confidentiality of transcripts.</strong> Attack transcripts can contain harmful content or customer prompts. Labs must use synthetic or public data only.</li><li><strong>Integrity of verdicts.</strong> An attacker who can inject into a transcript must not be able to flip the verdict (LLM01).</li></ul>
+<p>Write them as measurable targets, e.g. &quot;≥10 prompt-injection test cases pass in CI&quot;. That is exactly an M1 acceptance criterion.</p></div>
+<div class="callout arch"><h2>🏛 Architecture track</h2><p><strong>Today is the architecture track.</strong> Topic: <em>what architects do; quality attributes (scalability, availability, latency, security, cost, operability)</em>. Exercise: list the top 5 quality attributes for Bastion triage, rank them and note one trade-off between two of them. Keep the file. Architecture checkpoint <strong>A1</strong> (Week 3: first design kata plus the ADR habit) builds directly on it.</p></div>
+<section><h2><span class="ico">📚</span>Resources</h2><ul class="res"><li><a href="https://www.oreilly.com/library/view/fundamentals-of-software/9781098175504/" target="_blank" rel="noopener">Richards &amp; Ford, Fundamentals of Software Architecture, 2nd ed. (O&#x27;Reilly)</a> — chapters on architectural thinking and characteristics</li><li><a href="https://www.sei.cmu.edu/library/software-architecture-in-practice-fourth-edition/" target="_blank" rel="noopener">Bass, Clements, Kazman, Software Architecture in Practice, 4th ed. (SEI)</a> — optional: quality-attribute scenarios</li><li><a href="https://sre.google/sre-book/embracing-risk/" target="_blank" rel="noopener">Google SRE book, Embracing Risk (error budgets)</a></li><li><a href="https://sre.google/workbook/implementing-slos/" target="_blank" rel="noopener">Google SRE workbook, Implementing SLOs</a></li></ul></section>
+<section><h2><span class="ico">🃏</span>Recall quiz <span class="counter">(tap a card to flip)</span></h2><div class="quiz"><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>State the first and second laws of software architecture.</div><small>Q1 · tap to reveal</small></div><div class="face back"><div>1. Everything in software architecture is a trade-off. 2. Why is more important than how.</div><small>A1</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Three criteria that make something an architecture characteristic?</div><small>Q2 · tap to reveal</small></div><div class="face back"><div>It is a non-domain design consideration, it influences some structural aspect of the design, and it is critical or important to the application&#x27;s success.</div><small>A2</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>99.9% availability allows how much downtime per 30 days?</div><small>Q3 · tap to reveal</small></div><div class="face back"><div>0.1% × 43,200 min = 43.2 minutes (≈8.76 h per year).</div><small>A3</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Three serial dependencies at 99.95%, 99.9% and 99.95%: what&#x27;s the path availability?</div><small>Q4 · tap to reveal</small></div><div class="face back"><div>About 99.80%, because serial availabilities multiply. The chain is weaker than any single part.</div><small>A4</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why set latency SLOs on p95/p99 rather than the mean?</div><small>Q5 · tap to reveal</small></div><div class="face back"><div>Means hide tail latency. A few slow LLM calls make the mean describe nobody, while p95/p99 capture what the slowest users actually feel.</div><small>A5</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Name the six parts of a quality-attribute scenario.</div><small>Q6 · tap to reveal</small></div><div class="face back"><div>Source, stimulus, artifact, environment, response, response measure.</div><small>A6</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why not optimise for every quality attribute?</div><small>Q7 · tap to reveal</small></div><div class="face back"><div>Each one adds design cost and complexity, and many conflict (cost vs latency, security vs operability). Pick the few that drive the design and aim for the least-worst architecture.</div><small>A7</small></div></div></button></div></section>
+<section class="tomorrow"><h2><span class="ico">🔭</span>Tomorrow</h2><p><strong>Day 3 · Wednesday 2026-10-21 · 90 min</strong> — Tokens, context and the API surface: concepts II + decision guides</p><ul><li>Explain: pricing (input vs output vs cached tokens)</li><li>Explain: streaming with SSE</li><li>Explain: rate limits and error classes</li></ul></section>
+<footer>Generated from the AI Engineering Roadmap daily plan · Day 2 of 203 · Times in Asia/Kolkata</footer>
+</div>
+<script>
+(function(){
+  var root=document.documentElement, key='bastion-theme';
+  var saved=localStorage.getItem(key);
+  var dark=saved?saved==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  root.setAttribute('data-theme',dark?'dark':'light');
+  var btn=document.getElementById('themeToggle');
+  function label(){btn.textContent=root.getAttribute('data-theme')==='dark'?'☀ Light':'☾ Dark';}
+  if(btn){label();btn.addEventListener('click',function(){var d=root.getAttribute('data-theme')==='dark'?'light':'dark';root.setAttribute('data-theme',d);localStorage.setItem(key,d);label();rerenderMermaid();});}
+  // checklist persistence
+  var day=document.getElementById('app').dataset.day;
+  var boxes=document.querySelectorAll('.check input[type=checkbox]');
+  function count(){var n=0;boxes.forEach(function(b){if(b.checked)n++;});var c=document.getElementById('checkCount');if(c)c.textContent=n+' / '+boxes.length+' done';}
+  boxes.forEach(function(b,i){var k='bastion-day-'+day+'-task-'+i;b.checked=localStorage.getItem(k)==='1';b.closest('li').classList.toggle('done',b.checked);
+    b.addEventListener('change',function(){localStorage.setItem(k,b.checked?'1':'0');b.closest('li').classList.toggle('done',b.checked);count();});});
+  count();
+  // flip cards
+  document.querySelectorAll('.card').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('flipped');c.setAttribute('aria-pressed',c.classList.contains('flipped'));});});
+  // mermaid (optional, CDN) with graceful fallback
+  var hasMermaid=document.querySelector('.mermaid');
+  window.rerenderMermaid=function(){};
+  if(!hasMermaid)return;
+  var sources=[];document.querySelectorAll('.mermaid').forEach(function(el){sources.push(el.textContent);});
+  function fallback(){document.body.classList.add('no-mermaid');}
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+  s.async=true;
+  var timer=setTimeout(fallback,6000);
+  s.onload=function(){clearTimeout(timer);try{render();}catch(e){fallback();}};
+  s.onerror=function(){clearTimeout(timer);fallback();};
+  function render(){
+    var d=root.getAttribute('data-theme')==='dark';
+    window.mermaid.initialize({startOnLoad:false,theme:d?'dark':'default',securityLevel:'strict',fontFamily:'system-ui, sans-serif'});
+    document.querySelectorAll('.mermaid').forEach(function(el,i){el.removeAttribute('data-processed');el.textContent=sources[i];});
+    window.mermaid.run({querySelector:'.mermaid'}).catch(fallback);
+  }
+  window.rerenderMermaid=function(){if(window.mermaid){try{render();}catch(e){fallback();}}};
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>

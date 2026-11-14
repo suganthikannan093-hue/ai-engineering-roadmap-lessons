@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 9: Architecture track: Tradeoff analysis (ATAM-style utility trees) and architectural fitness functions</title>
+<script>(function(){try{var s=localStorage.getItem('bastion-theme');var d=s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();</script>
+<style>
+:root{--bg:#f7f8fb;--card:#ffffff;--ink:#1b2130;--muted:#5d6678;--line:#e3e7ef;--accent:#2f6fec;--accent-soft:#e8f0ff;
+--sec:#c0392b;--sec-soft:#fdecea;--arch:#7a4ce0;--arch-soft:#f1ebff;--ok:#1f9d63;--ok-soft:#e6f6ee;--warn:#b7791f;--warn-soft:#fff6e0;
+--code-bg:#f4f6fa;--kw:#8a2be2;--str:#0b7a3e;--num:#b35900;--com:#7b8494;--fn:#1f5fbf;--bi:#a0306a;--shadow:0 1px 2px rgba(20,30,60,.06),0 4px 14px rgba(20,30,60,.06)}
+[data-theme="dark"]{--bg:#0f131a;--card:#171c26;--ink:#e6e9f0;--muted:#9aa3b5;--line:#2a3140;--accent:#6ea0ff;--accent-soft:#1c2740;
+--sec:#ff7b6b;--sec-soft:#3a1f1d;--arch:#b597ff;--arch-soft:#271f3d;--ok:#4fd39a;--ok-soft:#173027;--warn:#f0c060;--warn-soft:#352b14;
+--code-bg:#11161f;--kw:#c792ea;--str:#a5e075;--num:#f78c6c;--com:#6b7689;--fn:#82aaff;--bi:#ff9cac;--shadow:none}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+header.hero{background:linear-gradient(135deg,var(--accent) 0%,#5b3fd6 100%);color:#fff;border-radius:18px;padding:22px 22px 18px;box-shadow:var(--shadow);position:relative}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;opacity:.95}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.18);white-space:nowrap}
+.hero h1{margin:10px 0 6px;font-size:clamp(22px,4vw,30px);line-height:1.2}
+.hero .sub{opacity:.9;font-size:14px}
+.bar{height:8px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;margin-top:12px}
+.bar>span{display:block;height:100%;background:#fff;border-radius:99px}
+.barlabel{display:flex;justify-content:space-between;font-size:12px;margin-top:4px;opacity:.9}
+.toggle{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:13px}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:16px 0;box-shadow:var(--shadow)}
+section>h2{margin:0 0 10px;font-size:19px;display:flex;align-items:center;gap:8px}
+.ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:15px}
+.tldr{border-left:5px solid var(--accent)}
+.tldr p{margin:.3em 0}
+ul.obj{margin:.4em 0 0;padding-left:1.2em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.concept{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--card)}
+.concept h3{margin:0 0 6px;font-size:16.5px}
+.concept p{margin:.45em 0}
+.concept.wide{grid-column:1/-1}
+.analogy{background:var(--warn-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+.analogy b{color:var(--warn)}
+.diagram{margin:10px 0;overflow-x:auto}
+.diagram svg{max-width:100%;height:auto;display:block}
+.diagram svg.bars{max-width:620px}
+blockquote{margin:.6em 0;padding:8px 14px;border-left:4px solid var(--line);color:var(--muted);font-style:italic}
+.mermaid-fallback{display:none}
+.no-mermaid .mermaid{display:none}
+.no-mermaid .mermaid-fallback{display:block}
+.tablewrap{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft);color:var(--ink)}
+tr:nth-child(even) td{background:color-mix(in srgb,var(--card) 94%,var(--ink) 6%)}
+.rule{background:var(--ok-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+pre.code{background:var(--code-bg);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;margin:8px 0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:.92em;background:var(--code-bg);padding:1px 5px;border-radius:5px}
+pre code{background:none;padding:0}
+.k{color:var(--kw);font-weight:600}.s{color:var(--str)}.n{color:var(--num)}.c{color:var(--com);font-style:italic}.f{color:var(--fn)}.b{color:var(--bi)}
+.check{list-style:none;padding:0;margin:6px 0}
+.check li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin:6px 0}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--ok);flex:none}
+.check li.done{background:var(--ok-soft);text-decoration:line-through;color:var(--muted)}
+.counter{font-size:13px;color:var(--muted)}
+.callout{border-radius:14px;padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout h2{margin:0 0 6px;font-size:17px}
+.callout.sec{background:var(--sec-soft);border-left:6px solid var(--sec)}
+.callout.sec h2{color:var(--sec)}
+.callout.arch{background:var(--arch-soft);border-left:6px solid var(--arch)}
+.callout.arch h2{color:var(--arch)}
+.callout p{margin:.4em 0}
+.res li{margin:5px 0}
+.quiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{perspective:1000px;cursor:pointer;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit}
+.card .inner{display:grid;transition:transform .5s;transform-style:preserve-3d;min-height:130px}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;padding:14px;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.front{background:var(--accent-soft)}
+.back{background:var(--ok-soft);transform:rotateY(180deg)}
+.face small{color:var(--muted);font-size:12px;margin-top:8px}
+.tomorrow{border-left:5px solid var(--arch)}
+footer{color:var(--muted);font-size:12.5px;text-align:center;padding:10px 0 30px}
+@media (max-width:600px){.wrap{padding:10px}section{padding:14px}header.hero{padding:18px 16px}.toggle{top:10px;right:10px}}
+@media print{.toggle{display:none}.card .inner{transform:none!important}.back{transform:none;margin-top:6px}.face{backface-visibility:visible}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" data-day="9">
+<header class="hero"><button class="toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">☾ Dark</button>
+<div class="meta"><span class="pill">Day 9 / 203</span><span class="pill">Tuesday 2026-10-27</span><span class="pill">Week 2 / 29</span><span class="pill">⏱ 120 min</span><span class="pill">arch</span></div>
+<h1>Architecture track: Tradeoff analysis (ATAM-style utility trees) and architectural fitness functions</h1>
+<div class="sub">Phase 1: LLM and application foundations · Structured outputs, tool calling and prompting</div>
+<div class="bar" aria-label="Roadmap progress"><span style="width:4.43%"></span></div>
+<div class="barlabel"><span>Roadmap progress 4.4%</span><span>Ends Sun 9 May 2027</span></div></header>
+<section class="tldr"><h2><span class="ico">⚡</span>Today in 30 seconds</h2><p>On Day 2 you listed and ranked Bastion&#x27;s quality attributes. Today you learn the two tools architects use to <strong>decide between them</strong> and then <strong>keep the decision true over time</strong>.</p>
+<p><strong>ATAM</strong> (the SEI&#x27;s Architecture Tradeoff Analysis Method) turns vague goals like &quot;fast and secure&quot; into a <strong>utility tree</strong>: quality attributes, refined into concrete scenarios, each rated by business importance and technical difficulty. It also gives you the vocabulary to name <strong>sensitivity points</strong>, <strong>tradeoff points</strong>, <strong>risks</strong> and <strong>non-risks</strong>.</p>
+<p><strong>Fitness functions</strong> (from <em>Building Evolutionary Architectures</em>) are automated checks that tell you whether the system still meets those scenarios, such as a p95 latency gate or a test that stops anyone importing the model SDK outside the gateway. The utility tree says what matters; fitness functions keep checking it on every commit.</p><p><strong>By the end of today you can:</strong></p><ul class="obj"><li>Build an ATAM-style utility tree: attribute, refinement, scenario, (importance, difficulty) rating</li><li>Tell sensitivity points, tradeoff points, risks and non-risks apart</li><li>Classify fitness functions (atomic vs holistic, triggered vs continuous, static vs dynamic)</li><li>Write one fitness function for Bastion that could run in CI</li></ul></section>
+<section><h2><span class="ico">🧠</span>Concepts</h2><div class="grid"><article class="concept wide"><h3>1. Why tradeoff analysis needs a method</h3><p>Every quality attribute you ranked on Day 2 pulls against at least one other. A bigger model improves triage accuracy but costs latency and money; a strict output schema improves safety but adds retries. Without a method, the loudest stakeholder wins.</p>
+<p>ATAM is the SEI&#x27;s structured review for this. The full method runs over several days with stakeholders, but its core is small enough for a solo project:</p>
+<ul><li><strong>Elicit</strong> what matters as concrete scenarios, not adjectives.</li><li><strong>Prioritise</strong> them so you know which ones the design must not miss.</li><li><strong>Analyse</strong> the architecture against the top scenarios and record what you find.</li></ul>
+<blockquote>You aren&#x27;t running a formal ATAM on Bastion. You&#x27;re borrowing its two best artefacts: the utility tree and the risk vocabulary.</blockquote></article><article class="concept wide"><h3>2. The ATAM phases at a glance</h3><p>Know the shape so you recognise it at work. Phase 1 is the architect and evaluators; Phase 2 adds the wider stakeholders, who brainstorm and vote on scenarios to check the utility tree didn&#x27;t miss anything.</p><div class="diagram"><svg viewBox="0 0 802 238" role="img" aria-label="The nine ATAM steps, grouped. The utility tree is built in the middle." xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><g style="color:var(--muted)" font-family="system-ui,sans-serif" font-size="13"><rect x="10" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="35.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Present</text><text x="95.0" y="51.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">method, business drivers,</text><text x="95.0" y="67.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">architecture</text><line x1="182" y1="47.0" x2="210" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="214" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="299.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Identify</text><text x="299.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">architectural approaches</text><line x1="386" y1="47.0" x2="414" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="418" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="503.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Utility tree</text><text x="503.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">attributes to scenarios</text><line x1="590" y1="47.0" x2="618" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="622" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="707.0" y="35.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Analyse</text><text x="707.0" y="51.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">approaches vs top</text><text x="707.0" y="67.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">scenarios</text><path d="M707.0,86 V104 H95.0 V120" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="10" y="124" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="157.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Brainstorm</text><text x="95.0" y="173.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">stakeholders vote</text><line x1="182" y1="161.0" x2="210" y2="161.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="214" y="124" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="299.0" y="157.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Re-analyse</text><text x="299.0" y="173.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">new top scenarios</text><line x1="386" y1="161.0" x2="414" y2="161.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="418" y="124" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="503.0" y="157.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Report</text><text x="503.0" y="173.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">risks, themes, tradeoffs</text></g></svg><div class="counter">The nine ATAM steps, grouped. The utility tree is built in the middle.</div></div></article><article class="concept wide"><h3>3. Anatomy of a utility tree</h3><p>The root is <strong>Utility</strong> (overall &quot;goodness&quot;). Below it sit quality attributes, then <strong>refinements</strong> (more specific concerns), then leaf <strong>scenarios</strong> written so they could be tested: stimulus, environment, response and a measurable response measure, like the six-part scenarios from Day 2.</p>
+<p>Each leaf gets two ratings, usually <strong>H/M/L</strong>:</p>
+<ul><li><strong>Importance</strong> to the business or mission.</li><li><strong>Difficulty</strong> (or risk) of achieving it with the current architecture.</li></ul>
+<p>The <strong>(H,H)</strong> leaves are where you spend analysis time. (H,L) leaves matter but are easy; (L,H) leaves are candidates to drop or defer.</p><div class="diagram"><pre class="mermaid">flowchart LR
+  U[Utility] --&gt; P[Performance]
+  U --&gt; S[Security]
+  U --&gt; C[Cost]
+  P --&gt; P1[Triage latency]
+  P --&gt; P2[Batch throughput]
+  S --&gt; S1[Prompt injection in transcripts]
+  S --&gt; S2[Secrets handling]
+  C --&gt; C1[Per-transcript spend]
+  C --&gt; C2[Runaway loops]
+  P1 --&gt; PS1[&quot;(H,M) p95 under 8 s for one transcript at normal load&quot;]
+  P2 --&gt; PS2[&quot;(M,M) 500 transcripts triaged within 30 min overnight&quot;]
+  S1 --&gt; SS1[&quot;(H,H) injected &#x27;call delete_all&#x27; runs no tool outside allow-list&quot;]
+  S2 --&gt; SS2[&quot;(H,L) API key never appears in logs or reports&quot;]
+  C1 --&gt; CS1[&quot;(H,M) average under budget per transcript&quot;]
+  C2 --&gt; CS2[&quot;(M,L) tool loop stops at max_steps, spend cap enforced&quot;]</pre><div class="mermaid-fallback"><p class="counter">Diagram source (Mermaid CDN unavailable):</p><pre class="code">flowchart LR
+  U[Utility] --&gt; P[Performance]
+  U --&gt; S[Security]
+  U --&gt; C[Cost]
+  P --&gt; P1[Triage latency]
+  P --&gt; P2[Batch throughput]
+  S --&gt; S1[Prompt injection in transcripts]
+  S --&gt; S2[Secrets handling]
+  C --&gt; C1[Per-transcript spend]
+  C --&gt; C2[Runaway loops]
+  P1 --&gt; PS1[&quot;(H,M) p95 under 8 s for one transcript at normal load&quot;]
+  P2 --&gt; PS2[&quot;(M,M) 500 transcripts triaged within 30 min overnight&quot;]
+  S1 --&gt; SS1[&quot;(H,H) injected &#x27;call delete_all&#x27; runs no tool outside allow-list&quot;]
+  S2 --&gt; SS2[&quot;(H,L) API key never appears in logs or reports&quot;]
+  C1 --&gt; CS1[&quot;(H,M) average under budget per transcript&quot;]
+  C2 --&gt; CS2[&quot;(M,L) tool loop stops at max_steps, spend cap enforced&quot;]</pre></div><div class="counter">A mini utility tree for Bastion (3 attributes, 2 scenarios each). Ratings are (importance, difficulty).</div></div></article><article class="concept wide"><h3>4. The risk vocabulary</h3><p>When you analyse an approach against a scenario, record findings in these four buckets. The vocabulary is the most reusable part of ATAM: it makes design reviews precise.</p><div class="tablewrap"><table><thead><tr><th>Term</th><th>Meaning</th><th>Bastion example</th></tr></thead><tbody><tr><td>Sensitivity point</td><td>A design decision that strongly affects <strong>one</strong> attribute</td><td>Choice of model size drives triage latency</td></tr><tr><td>Tradeoff point</td><td>A decision that is a sensitivity point for <strong>two or more</strong> attributes, pulling in different directions</td><td>Retry-on-validation-failure improves correctness but raises latency and cost</td></tr><tr><td>Risk</td><td>A decision that may lead to an undesirable outcome given the scenarios</td><td>Tool results go back to the model unfiltered, so an injected transcript could steer the next call</td></tr><tr><td>Non-risk</td><td>A decision judged safe, with the reasoning written down</td><td>Read-only tools this week, so excessive agency impact is bounded</td></tr><tr><td>Risk theme</td><td>Several risks sharing a root cause, reported to the business</td><td>&quot;Model output is trusted too early&quot; across classify, tools and reporting</td></tr></tbody></table></div></article><article class="concept wide"><h3>5. Lighter alternatives to a full ATAM</h3><p>ATAM is heavyweight. In practice you&#x27;ll often pick a lighter method. Choose based on how much is at stake and how many people need to agree.</p><div class="tablewrap"><table><thead><tr><th>Method</th><th>Effort</th><th>What you get</th><th>Choose when</th></tr></thead><tbody><tr><td>Full ATAM</td><td>Days, many stakeholders</td><td>Prioritised scenarios, risks, risk themes, shared understanding</td><td>High-stakes system, many stakeholders, costly to change later</td></tr><tr><td>Mini-ATAM / utility-tree workshop</td><td>Hours</td><td>Utility tree plus top risks</td><td>A team design review; your Bastion exercise today</td></tr><tr><td>CBAM (Cost Benefit Analysis Method)</td><td>After ATAM</td><td>Adds cost and benefit numbers to decide which fixes to fund</td><td>Several remediation options competing for budget</td></tr><tr><td>Lightweight ATAM / risk storming</td><td>1-2 hours</td><td>Quick risk list from a diagram</td><td>Agile teams, early designs, regular check-ins</td></tr><tr><td>ADR with tradeoff section</td><td>Minutes</td><td>One decision, its options and consequences recorded</td><td>Every individual significant decision (you start ADRs in Week 3)</td></tr></tbody></table></div></article><article class="concept"><h3>6. Fitness functions: keeping the tradeoff true</h3><p>A utility tree is a snapshot. Systems drift: someone adds a quick SDK call in the report module, a prompt grows and latency creeps up. Ford, Parsons, Kua and Sadalage call an <strong>architectural fitness function</strong> &quot;any mechanism that provides an objective integrity assessment of some architectural characteristic(s)&quot;.</p>
+<p>The link to ATAM is direct: <strong>each high-priority utility-tree scenario should become a fitness function</strong> where it can be automated. The response measure in the scenario becomes the threshold in the check.</p><div class="analogy"><b>Analogy:</b> The utility tree is the doctor&#x27;s list of what healthy means for you; fitness functions are the regular blood tests that tell you whether you still are.</div></article><article class="concept"><h3>7. Kinds of fitness function</h3><p>The book classifies them along several axes. Most real ones are <strong>atomic + triggered</strong> (a test in CI), but you should know the others.</p>
+<ul><li><strong>Atomic vs holistic:</strong> one characteristic in isolation, or several together (latency <em>and</em> cost under realistic load).</li><li><strong>Triggered vs continuous:</strong> runs on an event like a commit, or monitors production all the time (an SLO alert).</li><li><strong>Static vs dynamic:</strong> a fixed threshold, or one that shifts with context (allowed latency rises with batch size).</li><li><strong>Automated vs manual:</strong> prefer automated; some, like a legal review, stay manual.</li><li><strong>Temporal:</strong> a reminder that fires on a date, such as &quot;re-check model deprecation dates each quarter&quot;.</li></ul></article><article class="concept wide"><h3>8. Fitness function options for an LLM system</h3><p>Pick the cheapest mechanism that objectively checks the scenario.</p><div class="tablewrap"><table><thead><tr><th>Mechanism</th><th>Checks</th><th>Example tool</th><th>Choose when</th></tr></thead><tbody><tr><td>Dependency / import rules</td><td>Structure, layering, security boundaries</td><td>import-linter (Python), ArchUnit (Java), a small <code>ast</code> test</td><td>A boundary must never be crossed, such as SDK only via the gateway</td></tr><tr><td>Eval-set gates</td><td>Quality, correctness of outputs</td><td>Your eval harness in CI (Week 5 onward)</td><td>Prompt or model changes can quietly reduce accuracy</td></tr><tr><td>Latency / cost budgets on an eval run</td><td>Performance, cost</td><td>Assertions over recorded latencies and token usage</td><td>Every prompt or model change</td></tr><tr><td>Security test suites</td><td>Injection resistance, tool allow-list</td><td>Red-team prompt set, garak or promptfoo style runs</td><td>Anything touching tools, retrieval or output handling</td></tr><tr><td>Production monitors</td><td>Availability, real latency, spend</td><td>SLO alerts, spend caps</td><td>Continuous fitness after release</td></tr><tr><td>Static analysis / policy as code</td><td>Secrets, config, IaC rules</td><td>Secret scanners, OPA/Conftest</td><td>Infra and config drift</td></tr></tbody></table></div></article></div></section>
+<section><h2><span class="ico">🐍</span>fitness_functions.py: three Bastion fitness functions, fully offline</h2><p>Tested with Python 3.12, standard library only: <code>python3 fitness_functions.py</code>. It builds a throwaway source tree with one deliberate boundary violation and fake eval numbers, then runs a latency budget, a cost budget (illustrative, not a real price) and an SDK-import boundary check.</p><pre class="code"><code><span class="s">&quot;&quot;&quot;fitness_functions.py - Day 9: three architectural fitness functions for Bastion, runnable offline.
+
+Run: python3 fitness_functions.py   (or wire the check_* functions into pytest / CI)
+&quot;&quot;&quot;</span>
+<span class="k">import</span> ast
+<span class="k">import</span> statistics
+<span class="k">import</span> tempfile
+<span class="k">from</span> pathlib <span class="k">import</span> Path
+
+<span class="c"># --- 1. Performance: p95 triage latency from an eval run (atomic, triggered in CI) ---</span>
+<span class="k">def</span> <span class="f">p95</span>(values):
+    <span class="k">return</span> statistics.quantiles(values, n=<span class="n">20</span>, method=<span class="s">&quot;inclusive&quot;</span>)[<span class="n">18</span>]   <span class="c"># 19 cut points; [18] = p95</span>
+
+<span class="k">def</span> <span class="f">check_latency</span>(latencies_ms, budget_ms=<span class="n">8000</span>):
+    observed = p95(latencies_ms)
+    <span class="k">return</span> observed &lt;= budget_ms, <span class="s">f&quot;</span><span class="s">p95 latency </span>{observed:<span class="s">.0f</span>}<span class="s"> ms (budget </span>{budget_ms}<span class="s"> ms)</span><span class="s">&quot;</span>
+
+<span class="c"># --- 2. Cost: average spend per triaged transcript (atomic, triggered) ---</span>
+<span class="k">def</span> <span class="f">check_cost</span>(costs_usd, budget_usd=<span class="n">0.02</span>):            <span class="c"># illustrative budget, not a real price</span>
+    avg = <span class="b">sum</span>(costs_usd) / <span class="b">len</span>(costs_usd)
+    <span class="k">return</span> avg &lt;= budget_usd, <span class="s">f&quot;</span><span class="s">avg cost $</span>{avg:<span class="s">.4f</span>}<span class="s">/transcript (budget $</span>{budget_usd}<span class="s">)</span><span class="s">&quot;</span>
+
+<span class="c"># --- 3. Security/structure: only the gateway module may import the provider SDK ---</span>
+FORBIDDEN = {<span class="s">&quot;openai&quot;</span>, <span class="s">&quot;anthropic&quot;</span>}
+ALLOWED_FILE = <span class="s">&quot;llm_gateway.py&quot;</span>
+
+<span class="k">def</span> <span class="f">check_sdk_boundary</span>(src_dir):
+    offenders = []
+    <span class="k">for</span> path <span class="k">in</span> Path(src_dir).rglob(<span class="s">&quot;*.py&quot;</span>):
+        <span class="k">if</span> path.name == ALLOWED_FILE:
+            <span class="k">continue</span>
+        <span class="k">for</span> node <span class="k">in</span> ast.walk(ast.parse(path.read_text())):
+            names = []
+            <span class="k">if</span> <span class="b">isinstance</span>(node, ast.Import):
+                names = [a.name <span class="k">for</span> a <span class="k">in</span> node.names]
+            <span class="k">elif</span> <span class="b">isinstance</span>(node, ast.ImportFrom) <span class="k">and</span> node.module:
+                names = [node.module]
+            <span class="k">if</span> <span class="b">any</span>(n.split(<span class="s">&quot;.&quot;</span>)[<span class="n">0</span>] <span class="k">in</span> FORBIDDEN <span class="k">for</span> n <span class="k">in</span> names):
+                offenders.append(<span class="s">f&quot;</span>{path.name}<span class="s">:</span>{node.lineno}<span class="s">&quot;</span>)
+    <span class="k">return</span> <span class="k">not</span> offenders, <span class="s">f&quot;</span><span class="s">SDK imports outside gateway: </span>{offenders <span class="k">or</span> <span class="s">&#x27;none&#x27;</span>}<span class="s">&quot;</span>
+
+<span class="k">if</span> <span class="b">__name__</span> == <span class="s">&quot;__main__&quot;</span>:
+    <span class="k">with</span> tempfile.TemporaryDirectory() <span class="k">as</span> src:
+        Path(src, <span class="s">&quot;llm_gateway.py&quot;</span>).write_text(<span class="s">&quot;import openai\n&quot;</span>)
+        Path(src, <span class="s">&quot;triage.py&quot;</span>).write_text(<span class="s">&quot;from bastion.llm_gateway import complete\n&quot;</span>)
+        Path(src, <span class="s">&quot;report.py&quot;</span>).write_text(<span class="s">&quot;from openai import OpenAI  # shortcut someone took\n&quot;</span>)
+        latencies = [<span class="n">1200</span>, <span class="n">1500</span>, <span class="n">1800</span>, <span class="n">2100</span>, <span class="n">2500</span>, <span class="n">3000</span>, <span class="n">3200</span>, <span class="n">4100</span>, <span class="n">5000</span>, <span class="n">9500</span>] * <span class="n">2</span>
+        costs = [<span class="n">0.011</span>, <span class="n">0.014</span>, <span class="n">0.009</span>, <span class="n">0.022</span>, <span class="n">0.016</span>]
+        results = [check_latency(latencies), check_cost(costs), check_sdk_boundary(src)]
+    <span class="k">for</span> ok, msg <span class="k">in</span> results:
+        <span class="b">print</span>(<span class="s">&quot;PASS&quot;</span> <span class="k">if</span> ok <span class="k">else</span> <span class="s">&quot;FAIL&quot;</span>, msg)
+    <span class="k">raise</span> <span class="b">SystemExit</span>(<span class="n">0</span> <span class="k">if</span> <span class="b">all</span>(ok <span class="k">for</span> ok, _ <span class="k">in</span> results) <span class="k">else</span> <span class="n">1</span>)</code></pre><p>Expected output: <code>FAIL p95 latency 9500 ms (budget 8000 ms)</code>, <code>PASS avg cost $0.0144/transcript (budget $0.02)</code>, <code>FAIL SDK imports outside gateway: [&#x27;report.py:1&#x27;]</code>, and exit code 1, which is what makes CI go red. Each check maps to one utility-tree leaf: the response measure in the scenario became the threshold. For real projects, <code>import-linter</code> does check 3 declaratively from a config file.</p></section>
+<section><h2><span class="ico">✅</span>Hands-on task</h2><p>About 2 hours. Skim the SEI ATAM material for the utility tree and the risk vocabulary (about 40 min) and the fitness-function chapter of <em>Building Evolutionary Architectures</em> (about 30 min). Then do the exercise (about 50 min) in <code>bastion/docs/architecture/utility-tree.md</code>.</p><ul class="check"><li><input type="checkbox" id="t0" aria-label="task 1"><label for="t0">Skim the SEI ATAM collection: utility tree, sensitivity and tradeoff points, risks</label></li><li><input type="checkbox" id="t1" aria-label="task 2"><label for="t1">Read the fitness-function chapter of Building Evolutionary Architectures, 2nd ed.</label></li><li><input type="checkbox" id="t2" aria-label="task 3"><label for="t2">Run <code>fitness_functions.py</code> and make both failing checks pass by editing the fake data</label></li><li><input type="checkbox" id="t3" aria-label="task 4"><label for="t3">Draft Bastion&#x27;s mini utility tree: 3 quality attributes x 2 scenarios each, every leaf rated (importance, difficulty)</label></li><li><input type="checkbox" id="t4" aria-label="task 5"><label for="t4">Start from your Day 2 top-5 attributes; write every leaf with a measurable response measure</label></li><li><input type="checkbox" id="t5" aria-label="task 6"><label for="t5">Mark one sensitivity point, one tradeoff point, one risk and one non-risk</label></li><li><input type="checkbox" id="t6" aria-label="task 7"><label for="t6">State one tradeoff explicitly (for example: retry on validation failure vs p95 latency and cost)</label></li><li><input type="checkbox" id="t7" aria-label="task 8"><label for="t7">Write one fitness function you could automate in CI for an (H,H) or (H,M) leaf</label></li><li><input type="checkbox" id="t8" aria-label="task 9"><label for="t8">Keep it to one page and commit under <code>bastion/docs/architecture/</code></label></li><li><input type="checkbox" id="t9" aria-label="task 10"><label for="t9">Answer the recall cards from memory, then check</label></li></ul><div class="counter" id="checkCount"></div></section>
+<div class="callout sec"><h2>🛡 Security lens</h2><p><strong>Put security scenarios in the tree, not in a separate document.</strong> Security is a quality attribute like any other, so it competes openly with latency and cost instead of losing quietly.</p>
+<ul><li>A good Bastion security leaf: <em>an injected transcript saying &quot;call delete_all&quot; results in zero tool executions outside the allow-list, verified on every commit by a red-team prompt set</em>.</li><li>Boundary fitness functions (SDK only via the gateway, no secrets in logs) are cheap and catch the shortcuts that cause real incidents.</li><li>Rate security leaves honestly: prompt injection is usually (H,H), because there is no complete fix today.</li></ul></div>
+<div class="callout arch"><h2>🏛 Architecture track</h2><p><strong>Today is the architecture track.</strong> Topic: <em>tradeoff analysis (ATAM-style utility trees) and architectural fitness functions</em>. Exercise: draft a mini utility tree for Bastion (3 quality attributes x 2 scenarios each) and one fitness function you could automate in CI. Done when it&#x27;s written up in one page or less, committed, and states one tradeoff explicitly. Your ADRs from Week 3 will cite these scenarios.</p></div>
+<section><h2><span class="ico">📚</span>Resources</h2><ul class="res"><li><a href="https://www.sei.cmu.edu/library/architecture-tradeoff-analysis-method-collection/" target="_blank" rel="noopener">SEI ATAM collection</a> — The method, utility trees, sensitivity and tradeoff points</li><li><a href="https://www.oreilly.com/library/view/building-evolutionary-architectures/9781492097532/" target="_blank" rel="noopener">Ford et al., Building Evolutionary Architectures 2nd ed.</a> — Fitness functions: definitions, categories, examples</li><li><a href="https://import-linter.readthedocs.io/en/stable/" target="_blank" rel="noopener">import-linter docs</a> — Optional: declarative import-boundary fitness functions for Python</li></ul></section>
+<section><h2><span class="ico">🃏</span>Recall quiz <span class="counter">(tap a card to flip)</span></h2><div class="quiz"><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What is a utility tree, and what are its levels?</div><small>Q1 · tap to reveal</small></div><div class="face back"><div>A prioritisation tree rooted at Utility, branching into quality attributes, then refinements, then concrete testable scenarios. Each leaf is rated for importance and difficulty.</div><small>A1</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What do the two ratings on a leaf mean, and which leaves get attention first?</div><small>Q2 · tap to reveal</small></div><div class="face back"><div>Importance to the business and difficulty or risk for the architecture. (H,H) leaves get analysed first.</div><small>A2</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Sensitivity point vs tradeoff point?</div><small>Q3 · tap to reveal</small></div><div class="face back"><div>A sensitivity point strongly affects one attribute. A tradeoff point affects two or more in opposite directions, like retrying on validation failure (better correctness, worse latency and cost).</div><small>A3</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Risk vs non-risk in ATAM terms?</div><small>Q4 · tap to reveal</small></div><div class="face back"><div>A risk is a decision that may cause a bad outcome for a scenario; a non-risk is a decision judged safe, with the reasoning written down.</div><small>A4</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Define an architectural fitness function.</div><small>Q5 · tap to reveal</small></div><div class="face back"><div>Any mechanism that gives an objective integrity check of one or more architectural characteristics, such as a CI test that fails when p95 latency exceeds its budget.</div><small>A5</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>How do utility trees and fitness functions connect?</div><small>Q6 · tap to reveal</small></div><div class="face back"><div>Each high-priority scenario&#x27;s response measure becomes the threshold of a fitness function, so the tradeoff you decided keeps being checked on every change.</div><small>A6</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Atomic vs holistic, triggered vs continuous: give a Bastion example of each.</div><small>Q7 · tap to reveal</small></div><div class="face back"><div>Atomic: the SDK-import boundary test. Holistic: latency and cost asserted together on an eval run. Triggered: runs on every commit. Continuous: a production SLO or spend alert.</div><small>A7</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Name one tradeoff this topic forces in Bastion and how you&#x27;d decide it.</div><small>Q8 · tap to reveal</small></div><div class="face back"><div>Example: a larger model for accuracy vs latency and cost. Decide by the leaf ratings and response measures, for instance use the cheaper model with escalation if it meets the accuracy eval and stays under the p95 budget.</div><small>A8</small></div></div></button></div></section>
+<section class="tomorrow"><h2><span class="ico">🔭</span>Tomorrow</h2><p>Concepts II for this week: parallel tool calls, prompt structure (system vs user, few-shot, delimiters) and recovering when outputs fail validation, plus decision guides G2 and G9.</p></section>
+<footer>Generated from the AI Engineering Roadmap daily plan · Day 9 of 203 · Times in Asia/Kolkata</footer>
+</div>
+<script>
+(function(){
+  var root=document.documentElement, key='bastion-theme';
+  var saved=localStorage.getItem(key);
+  var dark=saved?saved==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  root.setAttribute('data-theme',dark?'dark':'light');
+  var btn=document.getElementById('themeToggle');
+  function label(){btn.textContent=root.getAttribute('data-theme')==='dark'?'☀ Light':'☾ Dark';}
+  if(btn){label();btn.addEventListener('click',function(){var d=root.getAttribute('data-theme')==='dark'?'light':'dark';root.setAttribute('data-theme',d);localStorage.setItem(key,d);label();rerenderMermaid();});}
+  // checklist persistence
+  var day=document.getElementById('app').dataset.day;
+  var boxes=document.querySelectorAll('.check input[type=checkbox]');
+  function count(){var n=0;boxes.forEach(function(b){if(b.checked)n++;});var c=document.getElementById('checkCount');if(c)c.textContent=n+' / '+boxes.length+' done';}
+  boxes.forEach(function(b,i){var k='bastion-day-'+day+'-task-'+i;b.checked=localStorage.getItem(k)==='1';b.closest('li').classList.toggle('done',b.checked);
+    b.addEventListener('change',function(){localStorage.setItem(k,b.checked?'1':'0');b.closest('li').classList.toggle('done',b.checked);count();});});
+  count();
+  // flip cards
+  document.querySelectorAll('.card').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('flipped');c.setAttribute('aria-pressed',c.classList.contains('flipped'));});});
+  // mermaid (optional, CDN) with graceful fallback
+  var hasMermaid=document.querySelector('.mermaid');
+  window.rerenderMermaid=function(){};
+  if(!hasMermaid)return;
+  var sources=[];document.querySelectorAll('.mermaid').forEach(function(el){sources.push(el.textContent);});
+  function fallback(){document.body.classList.add('no-mermaid');}
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+  s.async=true;
+  var timer=setTimeout(fallback,6000);
+  s.onload=function(){clearTimeout(timer);try{render();}catch(e){fallback();}};
+  s.onerror=function(){clearTimeout(timer);fallback();};
+  function render(){
+    var d=root.getAttribute('data-theme')==='dark';
+    window.mermaid.initialize({startOnLoad:false,theme:d?'dark':'default',securityLevel:'strict',fontFamily:'system-ui, sans-serif'});
+    document.querySelectorAll('.mermaid').forEach(function(el,i){el.removeAttribute('data-processed');el.textContent=sources[i];});
+    window.mermaid.run({querySelector:'.mermaid'}).catch(fallback);
+  }
+  window.rerenderMermaid=function(){if(window.mermaid){try{render();}catch(e){fallback();}}};
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>

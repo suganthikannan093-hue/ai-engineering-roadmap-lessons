@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 3: Pricing, streaming (SSE), rate limits and error classes</title>
+<script>(function(){try{var s=localStorage.getItem('bastion-theme');var d=s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();</script>
+<style>
+:root{--bg:#f7f8fb;--card:#ffffff;--ink:#1b2130;--muted:#5d6678;--line:#e3e7ef;--accent:#2f6fec;--accent-soft:#e8f0ff;
+--sec:#c0392b;--sec-soft:#fdecea;--arch:#7a4ce0;--arch-soft:#f1ebff;--ok:#1f9d63;--ok-soft:#e6f6ee;--warn:#b7791f;--warn-soft:#fff6e0;
+--code-bg:#f4f6fa;--kw:#8a2be2;--str:#0b7a3e;--num:#b35900;--com:#7b8494;--fn:#1f5fbf;--bi:#a0306a;--shadow:0 1px 2px rgba(20,30,60,.06),0 4px 14px rgba(20,30,60,.06)}
+[data-theme="dark"]{--bg:#0f131a;--card:#171c26;--ink:#e6e9f0;--muted:#9aa3b5;--line:#2a3140;--accent:#6ea0ff;--accent-soft:#1c2740;
+--sec:#ff7b6b;--sec-soft:#3a1f1d;--arch:#b597ff;--arch-soft:#271f3d;--ok:#4fd39a;--ok-soft:#173027;--warn:#f0c060;--warn-soft:#352b14;
+--code-bg:#11161f;--kw:#c792ea;--str:#a5e075;--num:#f78c6c;--com:#6b7689;--fn:#82aaff;--bi:#ff9cac;--shadow:none}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+header.hero{background:linear-gradient(135deg,var(--accent) 0%,#5b3fd6 100%);color:#fff;border-radius:18px;padding:22px 22px 18px;box-shadow:var(--shadow);position:relative}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;opacity:.95}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.18);white-space:nowrap}
+.hero h1{margin:10px 0 6px;font-size:clamp(22px,4vw,30px);line-height:1.2}
+.hero .sub{opacity:.9;font-size:14px}
+.bar{height:8px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;margin-top:12px}
+.bar>span{display:block;height:100%;background:#fff;border-radius:99px}
+.barlabel{display:flex;justify-content:space-between;font-size:12px;margin-top:4px;opacity:.9}
+.toggle{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:13px}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:16px 0;box-shadow:var(--shadow)}
+section>h2{margin:0 0 10px;font-size:19px;display:flex;align-items:center;gap:8px}
+.ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:15px}
+.tldr{border-left:5px solid var(--accent)}
+.tldr p{margin:.3em 0}
+ul.obj{margin:.4em 0 0;padding-left:1.2em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.concept{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--card)}
+.concept h3{margin:0 0 6px;font-size:16.5px}
+.concept p{margin:.45em 0}
+.concept.wide{grid-column:1/-1}
+.analogy{background:var(--warn-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+.analogy b{color:var(--warn)}
+.diagram{margin:10px 0;overflow-x:auto}
+.diagram svg{max-width:100%;height:auto;display:block}
+.diagram svg.bars{max-width:620px}
+blockquote{margin:.6em 0;padding:8px 14px;border-left:4px solid var(--line);color:var(--muted);font-style:italic}
+.mermaid-fallback{display:none}
+.no-mermaid .mermaid{display:none}
+.no-mermaid .mermaid-fallback{display:block}
+.tablewrap{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft);color:var(--ink)}
+tr:nth-child(even) td{background:color-mix(in srgb,var(--card) 94%,var(--ink) 6%)}
+.rule{background:var(--ok-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+pre.code{background:var(--code-bg);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;margin:8px 0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:.92em;background:var(--code-bg);padding:1px 5px;border-radius:5px}
+pre code{background:none;padding:0}
+.k{color:var(--kw);font-weight:600}.s{color:var(--str)}.n{color:var(--num)}.c{color:var(--com);font-style:italic}.f{color:var(--fn)}.b{color:var(--bi)}
+.check{list-style:none;padding:0;margin:6px 0}
+.check li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin:6px 0}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--ok);flex:none}
+.check li.done{background:var(--ok-soft);text-decoration:line-through;color:var(--muted)}
+.counter{font-size:13px;color:var(--muted)}
+.callout{border-radius:14px;padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout h2{margin:0 0 6px;font-size:17px}
+.callout.sec{background:var(--sec-soft);border-left:6px solid var(--sec)}
+.callout.sec h2{color:var(--sec)}
+.callout.arch{background:var(--arch-soft);border-left:6px solid var(--arch)}
+.callout.arch h2{color:var(--arch)}
+.callout p{margin:.4em 0}
+.res li{margin:5px 0}
+.quiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{perspective:1000px;cursor:pointer;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit}
+.card .inner{display:grid;transition:transform .5s;transform-style:preserve-3d;min-height:130px}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;padding:14px;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.front{background:var(--accent-soft)}
+.back{background:var(--ok-soft);transform:rotateY(180deg)}
+.face small{color:var(--muted);font-size:12px;margin-top:8px}
+.tomorrow{border-left:5px solid var(--arch)}
+footer{color:var(--muted);font-size:12.5px;text-align:center;padding:10px 0 30px}
+@media (max-width:600px){.wrap{padding:10px}section{padding:14px}header.hero{padding:18px 16px}.toggle{top:10px;right:10px}}
+@media print{.toggle{display:none}.card .inner{transform:none!important}.back{transform:none;margin-top:6px}.face{backface-visibility:visible}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" data-day="3">
+<header class="hero"><button class="toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">☾ Dark</button>
+<div class="meta"><span class="pill">Day 3 / 203</span><span class="pill">Wednesday 2026-10-21</span><span class="pill">Week 1 / 29</span><span class="pill">⏱ 90 min</span><span class="pill">concepts</span></div>
+<h1>Pricing, streaming (SSE), rate limits and error classes</h1>
+<div class="sub">Phase 1: LLM and application foundations · Tokens, context and the API surface · Guides G1, G2, G12</div>
+<div class="bar" aria-label="Roadmap progress"><span style="width:1.48%"></span></div>
+<div class="barlabel"><span>Roadmap progress 1.5%</span><span>Ends Sun 9 May 2027</span></div></header>
+<section class="tldr"><h2><span class="ico">⚡</span>Today in 30 seconds</h2><p>Every LLM call has a <strong>price</strong> (input, output and cached tokens are billed differently), a <strong>shape</strong> (one response, or a stream of Server-Sent Events) and a <strong>failure mode</strong> (rate limits, overloads, bad requests).</p>
+<p>Today you learn to estimate cost per call, read an SSE stream and measure time-to-first-token, and to retry only what is safe to retry, using exponential backoff with full jitter. These three pieces are the core of Saturday&#x27;s provider-agnostic client.</p><p><strong>By the end of today you can:</strong></p><ul class="obj"><li>Compute cost per call from input, output and cached tokens</li><li>Explain how SSE streaming works and measure TTFT vs total latency</li><li>Classify API errors as retryable or not, and implement backoff with full jitter</li><li>Pick a model, prompting and caching strategy with guides G1, G2 and G12</li></ul></section>
+<section><h2><span class="ico">🧠</span>Concepts</h2><div class="grid"><article class="concept wide"><h3>1. Pricing: input, output, cached</h3><p>Providers bill <strong>per million tokens (MTok)</strong>, with separate rates:</p>
+<ul><li><strong>Input tokens:</strong> everything you send (system prompt, tools, history, documents).</li><li><strong>Output tokens:</strong> what the model generates. Usually several times the input price. Reasoning models&#x27; hidden thinking tokens are billed as output.</li><li><strong>Cached input:</strong> a repeated <strong>prefix</strong> that the provider has already processed is billed at a discount. On many current models a cache read is about 0.1× the input price. Some providers also charge more to <em>write</em> the cache: Anthropic charges 1.25× for the 5-minute TTL and 2× for 1 hour, and OpenAI charges 1.25× on its newest models. The details are model-specific, so check the pricing page.</li><li><strong>Batch APIs</strong> (OpenAI Batch, Anthropic Message Batches) trade latency for a large discount on offline jobs such as nightly evals.</li></ul>
+<p>Cost per call = (fresh input + cached × read multiplier + written × write multiplier) × input price + output × output price.</p><div class="diagram"><svg class="bars" viewBox="0 0 560 100" role="img" aria-label="Today&#x27;s code with *illustrative* prices ($2 in / $10 out per MTok) for a 6,000-token prompt (5,000-token stable prefix) and 300 output tokens. Prompt caching cuts the cost by about 60%." xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif" font-size="13"><text x="162" y="23" text-anchor="end" fill="var(--ink)">No cache</text><rect x="170" y="9" width="265.7" height="20" rx="5" fill="var(--accent)"/><text x="441.7" y="23" fill="var(--muted)">15.0 $ per 1k calls</text><text x="162" y="53" text-anchor="end" fill="var(--ink)">First call (write)</text><rect x="170" y="39" width="310.0" height="20" rx="5" fill="var(--accent)"/><text x="486.0" y="53" fill="var(--muted)">17.5 $ per 1k calls</text><text x="162" y="83" text-anchor="end" fill="var(--ink)">Cache hit</text><rect x="170" y="69" width="106.3" height="20" rx="5" fill="var(--accent)"/><text x="282.3" y="83" fill="var(--muted)">6.0 $ per 1k calls</text></svg><div class="counter">Today&#x27;s code with <em>illustrative</em> prices ($2 in / $10 out per MTok) for a 6,000-token prompt (5,000-token stable prefix) and 300 output tokens. Prompt caching cuts the cost by about 60%.</div></div><div class="analogy"><b>Analogy:</b> Like a taxi: a fixed flag-fall (prompt), a per-km rate (output tokens, the expensive part), and a season pass (cache) that only works if you take exactly the same route from the start.</div></article><article class="concept wide"><h3>2. Streaming with Server-Sent Events</h3><p>With <code>stream: true</code> the HTTP response stays open with <code>Content-Type: text/event-stream</code>. The server writes events as lines like <code>event: ...</code> and <code>data: ...</code>, and a <strong>blank line ends each event</strong> (WHATWG HTML spec).</p>
+<ul><li><strong>OpenAI Chat Completions</strong> streams <code>data:</code> chunks and finishes with <code>data: [DONE]</code>. The <strong>Responses API</strong> uses typed events such as <code>response.output_text.delta</code> and <code>response.completed</code>.</li><li><strong>Anthropic</strong> sends <code>message_start</code>, <code>content_block_start</code>, <code>content_block_delta</code>, <code>content_block_stop</code>, <code>message_delta</code> and <code>message_stop</code>, plus <code>ping</code> keep-alives.</li></ul>
+<p>Streaming does not make generation faster. It cuts <strong>time-to-first-token (TTFT)</strong>, which is what users perceive. Measure TTFT and total time separately. Token usage usually arrives only at the end of the stream (OpenAI Chat Completions needs <code>stream_options: {&quot;include_usage&quot;: true}</code>).</p><div class="diagram"><pre class="mermaid">sequenceDiagram
+  participant C as bastion client
+  participant P as LLM provider
+  C-&gt;&gt;P: POST /v1/... stream=true
+  Note over P: prefill (reads whole prompt)
+  P--&gt;&gt;C: event 1 (first token)  ⟵ TTFT
+  loop decode
+    P--&gt;&gt;C: data: delta
+  end
+  P--&gt;&gt;C: final event with usage + stop reason
+  Note over C: log tokens, cost, TTFT, total latency</pre><div class="mermaid-fallback"><p class="counter">Diagram source (Mermaid CDN unavailable):</p><pre class="code">sequenceDiagram
+  participant C as bastion client
+  participant P as LLM provider
+  C-&gt;&gt;P: POST /v1/... stream=true
+  Note over P: prefill (reads whole prompt)
+  P--&gt;&gt;C: event 1 (first token)  ⟵ TTFT
+  loop decode
+    P--&gt;&gt;C: data: delta
+  end
+  P--&gt;&gt;C: final event with usage + stop reason
+  Note over C: log tokens, cost, TTFT, total latency</pre></div><div class="counter">An SSE stream from request to final usage.</div></div></article><article class="concept wide"><h3>3. Rate limits</h3><p>Limits are set per organisation or project, per model. They are usually counted as <strong>requests per minute (RPM)</strong> and <strong>tokens per minute (TPM)</strong>, sometimes per day as well. Anthropic splits TPM into input (ITPM) and output (OTPM). OpenAI counts the larger of <code>max_tokens</code> and the estimated request size against your limit, so an oversized <code>max_tokens</code> can throttle you early. Providers return the remaining budget in response headers (e.g. OpenAI <code>x-ratelimit-remaining-tokens</code>, Anthropic <code>anthropic-ratelimit-tokens-remaining</code>) and may send <code>retry-after</code> on a 429.</p>
+<p>Whether cached tokens count towards limits <strong>differs by provider</strong>. OpenAI counts them towards TPM. For most Claude models, cache reads do not count towards ITPM, so caching also raises your effective throughput.</p>
+<p>Bastion&#x27;s harness will fire thousands of attack prompts, so a <strong>client-side rate limiter</strong> (token bucket) plus a queue beats hammering the API and backing off.</p></article><article class="concept wide"><h3>4. Error classes: what to retry</h3><p>Retry only <strong>transient</strong> failures, and remember that retrying an LLM call <strong>costs money again</strong>.</p>
+<p>Use <strong>exponential backoff with full jitter</strong>, <code>sleep = random(0, min(cap, base·2^attempt))</code>, so many clients don&#x27;t retry in lockstep (AWS Architecture Blog). Honour <code>retry-after</code> when it is present. Cap the number of attempts and the total time.</p>
+<p>The official OpenAI and Anthropic Python SDKs already retry connection errors, 408, 409, 429 and 5xx (twice by default). Don&#x27;t wrap them in a second retry loop, or the retries multiply.</p><div class="tablewrap"><table><thead><tr><th>Status / error</th><th>Meaning</th><th>Retry?</th></tr></thead><tbody><tr><td>400 / 422</td><td>Invalid request: bad params, schema, context too long</td><td>No. Fix the request (trim context, lower max_tokens)</td></tr><tr><td>401 / 403</td><td>Bad key or no permission</td><td>No. Alert; may indicate a leaked or revoked key</td></tr><tr><td>404</td><td>Wrong model name or endpoint</td><td>No</td></tr><tr><td>408 / timeouts / connection reset</td><td>Transient network issue</td><td>Yes, with backoff</td></tr><tr><td>429 rate limit</td><td>RPM/TPM exceeded</td><td>Yes. Honour retry-after, then back off with jitter</td></tr><tr><td>429 insufficient_quota (OpenAI)</td><td>Out of credits or over the spend limit</td><td>No. It is a billing problem</td></tr><tr><td>500 / 502 / 503 / 504</td><td>Provider-side error</td><td>Yes, with backoff; consider a fallback provider</td></tr><tr><td>529 overloaded (Anthropic)</td><td>Provider overloaded</td><td>Yes, with backoff, or fall back</td></tr></tbody></table></div></article></div></section>
+<section><h2><span class="ico">⚖</span>When to choose which</h2><h3>G12. Caching</h3><p>Caching is the biggest cost lever you control today. For Bastion triage, put the stable system prompt, rubric and tool specs first.</p><div class="tablewrap"><table><thead><tr><th>Option</th><th>How it works</th><th>Choose when</th></tr></thead><tbody><tr><td>Exact response cache</td><td>Key = hash(model, params, full prompt), value = response</td><td>Repeated identical calls (classification, triage of duplicates, evals)</td></tr><tr><td>Semantic cache</td><td>Embed the query; return a cached answer if a similar query is within a threshold</td><td>FAQ-style, low-risk, single-tenant or tenant-scoped keys only</td></tr><tr><td>Provider prompt caching</td><td>Provider caches the processed prefix of long prompts; cached input tokens billed at a discount</td><td>Long stable system prompts, tool specs, documents</td></tr><tr><td>Self-hosted KV / prefix cache</td><td>Engine reuses attention KV state for shared prefixes (vLLM APC, SGLang RadixAttention; LMCache for offload/sharing)</td><td>Self-hosted serving with shared prefixes</td></tr><tr><td>Embedding / retrieval cache</td><td>Cache embeddings of documents and frequent queries</td><td>High-volume RAG</td></tr></tbody></table></div><div class="rule"><strong>Rule:</strong> put stable content first (system prompt, tools, documents) and variable content last to maximise prefix-cache hits. Every cache key must include tenant ID and model version.</div><p class="counter">Full guide: roadmap Section 9, <a href="../roadmap.html#g12-caching">G12 Caching</a>.</p><h3>G2. Prompting and context engineering</h3><p>Each prompting choice changes token count, and so cost and rate-limit pressure.</p><div class="tablewrap"><table><thead><tr><th>Option</th><th>Cons</th><th>Choose when</th></tr></thead><tbody><tr><td>Zero-shot instructions</td><td>Ambiguous tasks drift</td><td>Strong models on well-defined tasks</td></tr><tr><td>Few-shot examples</td><td>More tokens; examples can bias outputs</td><td>Format-sensitive or domain-specific tasks</td></tr><tr><td>Structured outputs</td><td>Schema design effort; can reduce quality if over-constrained</td><td>Any output consumed by code</td></tr><tr><td>Context compaction / summarisation</td><td>Lossy; summaries can drop key facts or carry injected text</td><td>Long-running agents and chats</td></tr></tbody></table></div><div class="rule"><strong>Default:</strong> clear zero-shot instructions plus structured outputs; add few-shot examples for format; use chaining before reaching for agents; treat context as a budget.</div><p class="counter">Full guide: roadmap Section 9, <a href="../roadmap.html#g2-prompting-and-context-engineering">G2 Prompting and context engineering</a>.</p></section>
+<section><h2><span class="ico">🐍</span>Cost calculator, SSE parser and retry with full jitter</h2><p>Runs offline with no API key: the stream and the failures are simulated. On Saturday you wire the same functions to a real provider (hosted or local Ollama).</p><pre class="code"><code><span class="c"># day3_api_surface.py  -  cost, SSE parsing and retries with full jitter (offline demo)</span>
+<span class="k">import</span> json, random, time
+<span class="k">from</span> dataclasses <span class="k">import</span> dataclass
+
+<span class="c"># ---- 1. Cost per call (ILLUSTRATIVE prices in USD per 1M tokens: check current pricing pages)</span>
+@dataclass(frozen=<span class="k">True</span>)
+<span class="k">class</span> <span class="f">Price</span>:
+    <span class="b">input</span>: <span class="b">float</span> = <span class="n">2.00</span>
+    output: <span class="b">float</span> = <span class="n">10.00</span>
+    cache_read_mult: <span class="b">float</span> = <span class="n">0.10</span>    <span class="c"># cached input billed at 10% (common, provider/model-specific)</span>
+    cache_write_mult: <span class="b">float</span> = <span class="n">1.25</span>   <span class="c"># some providers charge extra to write the cache</span>
+
+<span class="k">def</span> <span class="f">cost_usd</span>(p: Price, input_tok: <span class="b">int</span>, output_tok: <span class="b">int</span>, cached: <span class="b">int</span> = <span class="n">0</span>, written: <span class="b">int</span> = <span class="n">0</span>) -&gt; <span class="b">float</span>:
+    fresh = input_tok - cached - written
+    weighted = fresh + cached * p.cache_read_mult + written * p.cache_write_mult
+    <span class="k">return</span> (weighted * p.<span class="b">input</span> + output_tok * p.output) / <span class="n">1_000_000</span>
+
+p = Price()
+<span class="b">print</span>(<span class="s">f&quot;</span><span class="s">no cache   : $</span>{cost_usd(p, <span class="n">6_000</span>, <span class="n">300</span>):<span class="s">.5f</span>}<span class="s">&quot;</span>)
+<span class="b">print</span>(<span class="s">f&quot;</span><span class="s">cache write: $</span>{cost_usd(p, <span class="n">6_000</span>, <span class="n">300</span>, written=<span class="n">5_000</span>):<span class="s">.5f</span>}<span class="s">&quot;</span>)
+<span class="b">print</span>(<span class="s">f&quot;</span><span class="s">cache hit  : $</span>{cost_usd(p, <span class="n">6_000</span>, <span class="n">300</span>, cached=<span class="n">5_000</span>):<span class="s">.5f</span>}<span class="s">&quot;</span>)
+
+<span class="c"># ---- 2. Minimal SSE parser: events are separated by a blank line; fields are &quot;name: value&quot;</span>
+<span class="k">def</span> <span class="f">parse_sse</span>(chunks):
+    buf, event = <span class="s">&quot;&quot;</span>, {<span class="s">&quot;event&quot;</span>: <span class="s">&quot;message&quot;</span>, <span class="s">&quot;data&quot;</span>: []}
+    <span class="k">for</span> chunk <span class="k">in</span> chunks:                       <span class="c"># chunks can split lines anywhere</span>
+        buf += chunk
+        <span class="k">while</span> <span class="s">&quot;\n&quot;</span> <span class="k">in</span> buf:
+            line, buf = buf.split(<span class="s">&quot;\n&quot;</span>, <span class="n">1</span>)
+            line = line.rstrip(<span class="s">&quot;\r&quot;</span>)
+            <span class="k">if</span> line == <span class="s">&quot;&quot;</span>:                     <span class="c"># blank line = dispatch the event</span>
+                <span class="k">if</span> event[<span class="s">&quot;data&quot;</span>]:
+                    <span class="k">yield</span> event[<span class="s">&quot;event&quot;</span>], <span class="s">&quot;\n&quot;</span>.join(event[<span class="s">&quot;data&quot;</span>])
+                event = {<span class="s">&quot;event&quot;</span>: <span class="s">&quot;message&quot;</span>, <span class="s">&quot;data&quot;</span>: []}
+            <span class="k">elif</span> line.startswith(<span class="s">&quot;:&quot;</span>):         <span class="c"># comment / keep-alive</span>
+                <span class="k">continue</span>
+            <span class="k">else</span>:
+                field, _, value = line.partition(<span class="s">&quot;:&quot;</span>)
+                value = value[<span class="n">1</span>:] <span class="k">if</span> value.startswith(<span class="s">&quot; &quot;</span>) <span class="k">else</span> value
+                <span class="k">if</span> field == <span class="s">&quot;data&quot;</span>:
+                    event[<span class="s">&quot;data&quot;</span>].append(value)
+                <span class="k">elif</span> field == <span class="s">&quot;event&quot;</span>:
+                    event[<span class="s">&quot;event&quot;</span>] = value
+
+fake_stream = [<span class="s">&#x27;data: {&quot;delta&quot;: &quot;Ver&#x27;</span>, <span class="s">&#x27;dict: &quot;}\n\n: ping\n\ndata: {&quot;delta&quot;: &quot;jailbreak&quot;}\n&#x27;</span>, <span class="s">&#x27;\ndata: [DONE]\n\n&#x27;</span>]
+t0, text = time.perf_counter(), []
+<span class="k">for</span> name, data <span class="k">in</span> parse_sse(fake_stream):
+    <span class="k">if</span> data == <span class="s">&quot;[DONE]&quot;</span>:
+        <span class="k">break</span>
+    <span class="k">if</span> <span class="k">not</span> text:
+        <span class="b">print</span>(<span class="s">f&quot;</span><span class="s">TTFT </span>{<span class="n">1000</span> * (time.perf_counter() - t0):<span class="s">.2f</span>}<span class="s"> ms</span><span class="s">&quot;</span>)
+    text.append(json.loads(data)[<span class="s">&quot;delta&quot;</span>])
+<span class="b">print</span>(<span class="s">&quot;&quot;</span>.join(text))
+
+<span class="c"># ---- 3. Retries: only for retryable errors, exponential backoff with FULL jitter</span>
+<span class="k">class</span> <span class="f">APIError</span>(<span class="b">Exception</span>):
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, status: <span class="b">int</span>, code: <span class="b">str</span> = <span class="s">&quot;&quot;</span>, retry_after: <span class="b">float</span> | <span class="k">None</span> = <span class="k">None</span>):
+        <span class="b">super</span>().__init__(<span class="s">f&quot;</span>{status}<span class="s"> </span>{code}<span class="s">&quot;</span>)
+        <span class="k">self</span>.status, <span class="k">self</span>.code, <span class="k">self</span>.retry_after = status, code, retry_after
+
+RETRYABLE = {<span class="n">408</span>, <span class="n">409</span>, <span class="n">429</span>, <span class="n">500</span>, <span class="n">502</span>, <span class="n">503</span>, <span class="n">504</span>, <span class="n">529</span>}
+
+<span class="k">def</span> <span class="f">should_retry</span>(e: APIError) -&gt; <span class="b">bool</span>:
+    <span class="k">if</span> e.status == <span class="n">429</span> <span class="k">and</span> e.code == <span class="s">&quot;insufficient_quota&quot;</span>:   <span class="c"># billing problem: retrying won&#x27;t help</span>
+        <span class="k">return</span> <span class="k">False</span>
+    <span class="k">return</span> e.status <span class="k">in</span> RETRYABLE
+
+<span class="k">def</span> <span class="f">call_with_retries</span>(fn, max_attempts=<span class="n">5</span>, base=<span class="n">0.5</span>, cap=<span class="n">20.0</span>, sleep=time.sleep):
+    <span class="k">for</span> attempt <span class="k">in</span> <span class="b">range</span>(max_attempts):
+        <span class="k">try</span>:
+            <span class="k">return</span> fn()
+        <span class="k">except</span> APIError <span class="k">as</span> e:
+            <span class="k">if</span> <span class="k">not</span> should_retry(e) <span class="k">or</span> attempt == max_attempts - <span class="n">1</span>:
+                <span class="k">raise</span>
+            delay = e.retry_after <span class="k">if</span> e.retry_after <span class="k">is</span> <span class="k">not</span> <span class="k">None</span> <span class="k">else</span> random.uniform(<span class="n">0</span>, <span class="b">min</span>(cap, base * <span class="n">2</span> ** attempt))
+            <span class="b">print</span>(<span class="s">f&quot;</span><span class="s">attempt </span>{attempt + <span class="n">1</span>}<span class="s"> failed (</span>{e}<span class="s">); sleeping </span>{delay:<span class="s">.2f</span>}<span class="s">s</span><span class="s">&quot;</span>)
+            sleep(delay)
+
+failures = <span class="b">iter</span>([APIError(<span class="n">503</span>), APIError(<span class="n">429</span>, retry_after=<span class="n">1.0</span>)])
+<span class="k">def</span> <span class="f">flaky</span>():
+    e = <span class="b">next</span>(failures, <span class="k">None</span>)
+    <span class="k">if</span> e:
+        <span class="k">raise</span> e
+    <span class="k">return</span> <span class="s">&quot;ok&quot;</span>
+<span class="b">print</span>(call_with_retries(flaky, sleep=<span class="k">lambda</span> s: <span class="k">None</span>))</code></pre><p>Expected output: no cache $0.01500, cache write $0.01750, cache hit $0.00600 per call. The parser rebuilds <code>Verdict: jailbreak</code> from chunks that split mid-token and ignores the <code>: ping</code> comment. The retry loop sleeps after the 503 (jittered) and after the 429 (honours <code>retry_after=1.0</code>), then returns <code>ok</code>. Note the design choice: <code>insufficient_quota</code> and 4xx errors fail fast.</p></section>
+<section><h2><span class="ico">✅</span>Hands-on task</h2><p>90 minutes. Read the OpenAI text-generation and streaming guides and the Anthropic API intro (≈45 min). Run and extend the code (≈30 min). Skim G1, G2 and G12 in the roadmap and write the notes (≈15 min).</p><ul class="check"><li><input type="checkbox" id="t0" aria-label="task 1"><label for="t0">Read the OpenAI text generation + streaming guides and the Anthropic API intro</label></li><li><input type="checkbox" id="t1" aria-label="task 2"><label for="t1">Run <code>day3_api_surface.py</code>; confirm the three costs and the reconstructed text</label></li><li><input type="checkbox" id="t2" aria-label="task 3"><label for="t2">Add a <code>total_timeout</code> to <code>call_with_retries</code> so a call never exceeds 60 s across retries</label></li><li><input type="checkbox" id="t3" aria-label="task 4"><label for="t3">Write down current real prices for one hosted model you will use, from the official pricing page (not from memory)</label></li><li><input type="checkbox" id="t4" aria-label="task 5"><label for="t4">In <code>notes/week-01.md</code>: one line each on G1, G2 and G12 for Bastion triage (which model tier, prompting style, cache strategy)</label></li><li><input type="checkbox" id="t5" aria-label="task 6"><label for="t5">Flip the recall cards</label></li></ul><div class="counter" id="checkCount"></div></section>
+<div class="callout sec"><h2>🛡 Security lens</h2><p><strong>OWASP LLM10:2025 Unbounded Consumption.</strong> Attackers (or your own buggy harness) can run up cost or exhaust capacity: huge inputs, max-length outputs, retry storms and agent loops. This week&#x27;s controls:</p>
+<ul><li>Set a hard <code>max_tokens</code> and client timeouts on every call.</li><li>Enforce a per-key daily <strong>spend cap</strong> and alerting.</li><li>Cap retries and use jitter.</li><li>Keep keys out of git with <code>gitleaks</code> in pre-commit.</li></ul>
+<p>Two more things to watch:</p>
+<ul><li><strong>Streaming bypasses post-hoc filters.</strong> Tokens reach the user before an output guardrail can see the whole answer. Either buffer, or moderate incrementally and be ready to cut the stream.</li><li><strong>Caches can leak.</strong> Shared prompt caches can enable cache-hit timing probes across users. Scope cache keys per tenant (G12 rule).</li></ul></div>
+<div class="callout arch"><h2>🏛 Architecture track</h2><p>Connect this to yesterday&#x27;s quality attributes. <strong>Cost</strong> (per-call price, caching), <strong>latency</strong> (TTFT vs total, which is why SLOs use p95), <strong>availability</strong> (retries plus a fallback provider) and <strong>operability</strong> (rate-limit headers in your logs). Your retry policy is an architecture decision. Capture it as a candidate for ADR-001 in Week 3. Week 6&#x27;s architecture track goes deeper on idempotency, retries and backoff.</p></div>
+<section><h2><span class="ico">📚</span>Resources</h2><ul class="res"><li><a href="https://platform.openai.com/docs/guides/text" target="_blank" rel="noopener">OpenAI text generation guide</a></li><li><a href="https://platform.openai.com/docs/guides/streaming-responses" target="_blank" rel="noopener">OpenAI streaming responses guide</a></li><li><a href="https://docs.claude.com/en/docs/intro" target="_blank" rel="noopener">Anthropic API intro</a></li><li><a href="https://docs.claude.com/en/docs/build-with-claude/streaming" target="_blank" rel="noopener">Anthropic streaming messages (event types)</a></li><li><a href="https://platform.openai.com/docs/guides/rate-limits" target="_blank" rel="noopener">OpenAI rate limits</a></li><li><a href="https://docs.claude.com/en/api/rate-limits" target="_blank" rel="noopener">Anthropic rate limits</a> — and errors: https://docs.claude.com/en/api/errors</li><li><a href="https://platform.openai.com/docs/guides/prompt-caching" target="_blank" rel="noopener">OpenAI prompt caching</a></li><li><a href="https://docs.claude.com/en/docs/build-with-claude/prompt-caching" target="_blank" rel="noopener">Anthropic prompt caching</a></li><li><a href="https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/" target="_blank" rel="noopener">AWS Architecture Blog, Exponential Backoff and Jitter</a></li><li><a href="https://html.spec.whatwg.org/multipage/server-sent-events.html" target="_blank" rel="noopener">WHATWG HTML spec, Server-sent events</a></li><li><a href="https://genai.owasp.org/llmrisk/llm102025-unbounded-consumption/" target="_blank" rel="noopener">OWASP LLM10:2025 Unbounded Consumption</a></li></ul></section>
+<section><h2><span class="ico">🃏</span>Recall quiz <span class="counter">(tap a card to flip)</span></h2><div class="quiz"><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why does a 5,000-token stable system prompt matter so much for cost?</div><small>Q1 · tap to reveal</small></div><div class="face back"><div>When it sits first and stays identical, provider prompt caching bills it at a large discount (often ~0.1× input) on repeat calls. Change one early token and you lose the cache.</div><small>A1</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Does streaming make generation faster?</div><small>Q2 · tap to reveal</small></div><div class="face back"><div>No. Total generation time is about the same. Streaming reduces time-to-first-token, which is the latency users perceive.</div><small>A2</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>How does an SSE client know an event is complete?</div><small>Q3 · tap to reveal</small></div><div class="face back"><div>A blank line ends the event. Lines starting with <code>:</code> are comments or keep-alives. OpenAI Chat Completions ends the stream with <code>data: [DONE]</code>.</div><small>A3</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Which errors should you retry?</div><small>Q4 · tap to reveal</small></div><div class="face back"><div>Transient ones: timeouts/connection errors, 408, 429 rate limits, 5xx and Anthropic 529. Not 400/401/403/404/422, and not OpenAI&#x27;s 429 insufficient_quota.</div><small>A4</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What is full jitter and why use it?</div><small>Q5 · tap to reveal</small></div><div class="face back"><div>Sleep a random time between 0 and min(cap, base·2^attempt). It spreads retries so many clients don&#x27;t hit the provider in synchronised waves.</div><small>A5</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why can a huge max_tokens hurt you even if outputs are short?</div><small>Q6 · tap to reveal</small></div><div class="face back"><div>OpenAI counts the larger of max_tokens and the estimated request size against your rate limit, and if the model does run long you pay for it and widen your Unbounded Consumption risk (LLM10).</div><small>A6</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Name one security risk specific to streaming.</div><small>Q7 · tap to reveal</small></div><div class="face back"><div>Output guardrails that wait for the full response are bypassed, because the user already saw the tokens. Buffer or moderate incrementally.</div><small>A7</small></div></div></button></div></section>
+<section class="tomorrow"><h2><span class="ico">🔭</span>Tomorrow</h2><p><strong>Day 4 · Thursday 2026-10-22 · 60 min</strong> — Lab prep: Tokens, context and the API surface</p><ul><li>Prepare the environment and scaffolding for this week&#x27;s lab</li><li>Write the lab&#x27;s done criteria before coding</li></ul></section>
+<footer>Generated from the AI Engineering Roadmap daily plan · Day 3 of 203 · Times in Asia/Kolkata</footer>
+</div>
+<script>
+(function(){
+  var root=document.documentElement, key='bastion-theme';
+  var saved=localStorage.getItem(key);
+  var dark=saved?saved==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  root.setAttribute('data-theme',dark?'dark':'light');
+  var btn=document.getElementById('themeToggle');
+  function label(){btn.textContent=root.getAttribute('data-theme')==='dark'?'☀ Light':'☾ Dark';}
+  if(btn){label();btn.addEventListener('click',function(){var d=root.getAttribute('data-theme')==='dark'?'light':'dark';root.setAttribute('data-theme',d);localStorage.setItem(key,d);label();rerenderMermaid();});}
+  // checklist persistence
+  var day=document.getElementById('app').dataset.day;
+  var boxes=document.querySelectorAll('.check input[type=checkbox]');
+  function count(){var n=0;boxes.forEach(function(b){if(b.checked)n++;});var c=document.getElementById('checkCount');if(c)c.textContent=n+' / '+boxes.length+' done';}
+  boxes.forEach(function(b,i){var k='bastion-day-'+day+'-task-'+i;b.checked=localStorage.getItem(k)==='1';b.closest('li').classList.toggle('done',b.checked);
+    b.addEventListener('change',function(){localStorage.setItem(k,b.checked?'1':'0');b.closest('li').classList.toggle('done',b.checked);count();});});
+  count();
+  // flip cards
+  document.querySelectorAll('.card').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('flipped');c.setAttribute('aria-pressed',c.classList.contains('flipped'));});});
+  // mermaid (optional, CDN) with graceful fallback
+  var hasMermaid=document.querySelector('.mermaid');
+  window.rerenderMermaid=function(){};
+  if(!hasMermaid)return;
+  var sources=[];document.querySelectorAll('.mermaid').forEach(function(el){sources.push(el.textContent);});
+  function fallback(){document.body.classList.add('no-mermaid');}
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+  s.async=true;
+  var timer=setTimeout(fallback,6000);
+  s.onload=function(){clearTimeout(timer);try{render();}catch(e){fallback();}};
+  s.onerror=function(){clearTimeout(timer);fallback();};
+  function render(){
+    var d=root.getAttribute('data-theme')==='dark';
+    window.mermaid.initialize({startOnLoad:false,theme:d?'dark':'default',securityLevel:'strict',fontFamily:'system-ui, sans-serif'});
+    document.querySelectorAll('.mermaid').forEach(function(el,i){el.removeAttribute('data-processed');el.textContent=sources[i];});
+    window.mermaid.run({querySelector:'.mermaid'}).catch(fallback);
+  }
+  window.rerenderMermaid=function(){if(window.mermaid){try{render();}catch(e){fallback();}}};
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>

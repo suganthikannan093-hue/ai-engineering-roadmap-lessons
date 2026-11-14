@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 5: Recall + security lens: lock in Week 1 and cap your spend</title>
+<script>(function(){try{var s=localStorage.getItem('bastion-theme');var d=s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();</script>
+<style>
+:root{--bg:#f7f8fb;--card:#ffffff;--ink:#1b2130;--muted:#5d6678;--line:#e3e7ef;--accent:#2f6fec;--accent-soft:#e8f0ff;
+--sec:#c0392b;--sec-soft:#fdecea;--arch:#7a4ce0;--arch-soft:#f1ebff;--ok:#1f9d63;--ok-soft:#e6f6ee;--warn:#b7791f;--warn-soft:#fff6e0;
+--code-bg:#f4f6fa;--kw:#8a2be2;--str:#0b7a3e;--num:#b35900;--com:#7b8494;--fn:#1f5fbf;--bi:#a0306a;--shadow:0 1px 2px rgba(20,30,60,.06),0 4px 14px rgba(20,30,60,.06)}
+[data-theme="dark"]{--bg:#0f131a;--card:#171c26;--ink:#e6e9f0;--muted:#9aa3b5;--line:#2a3140;--accent:#6ea0ff;--accent-soft:#1c2740;
+--sec:#ff7b6b;--sec-soft:#3a1f1d;--arch:#b597ff;--arch-soft:#271f3d;--ok:#4fd39a;--ok-soft:#173027;--warn:#f0c060;--warn-soft:#352b14;
+--code-bg:#11161f;--kw:#c792ea;--str:#a5e075;--num:#f78c6c;--com:#6b7689;--fn:#82aaff;--bi:#ff9cac;--shadow:none}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+header.hero{background:linear-gradient(135deg,var(--accent) 0%,#5b3fd6 100%);color:#fff;border-radius:18px;padding:22px 22px 18px;box-shadow:var(--shadow);position:relative}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;opacity:.95}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.18);white-space:nowrap}
+.hero h1{margin:10px 0 6px;font-size:clamp(22px,4vw,30px);line-height:1.2}
+.hero .sub{opacity:.9;font-size:14px}
+.bar{height:8px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;margin-top:12px}
+.bar>span{display:block;height:100%;background:#fff;border-radius:99px}
+.barlabel{display:flex;justify-content:space-between;font-size:12px;margin-top:4px;opacity:.9}
+.toggle{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:13px}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:16px 0;box-shadow:var(--shadow)}
+section>h2{margin:0 0 10px;font-size:19px;display:flex;align-items:center;gap:8px}
+.ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:15px}
+.tldr{border-left:5px solid var(--accent)}
+.tldr p{margin:.3em 0}
+ul.obj{margin:.4em 0 0;padding-left:1.2em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.concept{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--card)}
+.concept h3{margin:0 0 6px;font-size:16.5px}
+.concept p{margin:.45em 0}
+.concept.wide{grid-column:1/-1}
+.analogy{background:var(--warn-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+.analogy b{color:var(--warn)}
+.diagram{margin:10px 0;overflow-x:auto}
+.diagram svg{max-width:100%;height:auto;display:block}
+.diagram svg.bars{max-width:620px}
+blockquote{margin:.6em 0;padding:8px 14px;border-left:4px solid var(--line);color:var(--muted);font-style:italic}
+.mermaid-fallback{display:none}
+.no-mermaid .mermaid{display:none}
+.no-mermaid .mermaid-fallback{display:block}
+.tablewrap{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft);color:var(--ink)}
+tr:nth-child(even) td{background:color-mix(in srgb,var(--card) 94%,var(--ink) 6%)}
+.rule{background:var(--ok-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+pre.code{background:var(--code-bg);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;margin:8px 0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:.92em;background:var(--code-bg);padding:1px 5px;border-radius:5px}
+pre code{background:none;padding:0}
+.k{color:var(--kw);font-weight:600}.s{color:var(--str)}.n{color:var(--num)}.c{color:var(--com);font-style:italic}.f{color:var(--fn)}.b{color:var(--bi)}
+.check{list-style:none;padding:0;margin:6px 0}
+.check li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin:6px 0}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--ok);flex:none}
+.check li.done{background:var(--ok-soft);text-decoration:line-through;color:var(--muted)}
+.counter{font-size:13px;color:var(--muted)}
+.callout{border-radius:14px;padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout h2{margin:0 0 6px;font-size:17px}
+.callout.sec{background:var(--sec-soft);border-left:6px solid var(--sec)}
+.callout.sec h2{color:var(--sec)}
+.callout.arch{background:var(--arch-soft);border-left:6px solid var(--arch)}
+.callout.arch h2{color:var(--arch)}
+.callout p{margin:.4em 0}
+.res li{margin:5px 0}
+.quiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{perspective:1000px;cursor:pointer;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit}
+.card .inner{display:grid;transition:transform .5s;transform-style:preserve-3d;min-height:130px}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;padding:14px;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.front{background:var(--accent-soft)}
+.back{background:var(--ok-soft);transform:rotateY(180deg)}
+.face small{color:var(--muted);font-size:12px;margin-top:8px}
+.tomorrow{border-left:5px solid var(--arch)}
+footer{color:var(--muted);font-size:12.5px;text-align:center;padding:10px 0 30px}
+@media (max-width:600px){.wrap{padding:10px}section{padding:14px}header.hero{padding:18px 16px}.toggle{top:10px;right:10px}}
+@media print{.toggle{display:none}.card .inner{transform:none!important}.back{transform:none;margin-top:6px}.face{backface-visibility:visible}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" data-day="5">
+<header class="hero"><button class="toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">☾ Dark</button>
+<div class="meta"><span class="pill">Day 5 / 203</span><span class="pill">Friday 2026-10-23</span><span class="pill">Week 1 / 29</span><span class="pill">⏱ 30 min</span><span class="pill">review</span></div>
+<h1>Recall + security lens: lock in Week 1 and cap your spend</h1>
+<div class="sub">Phase 1: LLM and application foundations · Tokens, context and the API surface</div>
+<div class="bar" aria-label="Roadmap progress"><span style="width:2.46%"></span></div>
+<div class="barlabel"><span>Roadmap progress 2.5%</span><span>Ends Sun 9 May 2027</span></div></header>
+<section class="tldr"><h2><span class="ico">⚡</span>Today in 30 seconds</h2><p>Friday is a short <strong>recall day</strong>. First you answer the week&#x27;s questions <em>without notes</em>: tokens, context windows, sampling, message roles, pricing, streaming and rate limits. Writing answers from memory is what makes them stick, and the gaps you find tell you what to revisit before Saturday&#x27;s lab.</p>
+<p>Then you apply this week&#x27;s <strong>security lens</strong>: skim the <strong>OWASP Top 10 for LLM Applications 2025</strong> and implement controls for <strong>LLM10 Unbounded Consumption</strong>: a hard <code>max_tokens</code>, request timeouts and a per-key daily spend cap, with keys kept out of git by <code>gitleaks</code>.</p><p><strong>By the end of today you can:</strong></p><ul class="obj"><li>Recall the seven Week 1 concepts from memory and note your gaps</li><li>Explain the OWASP LLM Top 10 (2025) at a glance and why LLM10 matters for every API caller</li><li>Add max_tokens, timeout and daily-spend-cap controls to Bastion (or schedule them for the lab)</li></ul></section>
+<section><h2><span class="ico">🧠</span>Concepts</h2><div class="grid"><article class="concept wide"><h3>1. How to do recall (10 minutes)</h3><p>Close every tab and note. For each concept below, write two sentences: <strong>what it is</strong> and <strong>where it shows up in Bastion</strong>. Mark each one green (confident), amber (shaky) or red (blank). Only then open the flip cards at the bottom to check.</p>
+<ul><li>Ambers and reds go into <code>notes/week-01.md</code> under <em>Gaps</em>.</li><li>Re-read only the matching section of Days 1-4, not the whole lesson.</li></ul>
+<blockquote>Retrieval practice beats re-reading: the effort of pulling an answer out of memory is what strengthens it.</blockquote><div class="analogy"><b>Analogy:</b> Re-reading is watching someone lift weights. Recall is lifting them yourself.</div></article><article class="concept wide"><h3>2. Week 1 on one page</h3><p>Everything this week fits into one request/response loop. Use this as a map while you check your answers.</p><div class="tablewrap"><table><thead><tr><th>Concept</th><th>One-line meaning</th><th>Where it bites in Bastion</th></tr></thead><tbody><tr><td>Tokenisation</td><td>Text is split into sub-word tokens; everything is counted in tokens</td><td>Cost, limits and obfuscation attacks (leetspeak inflates tokens and dodges keyword filters)</td></tr><tr><td>Context window</td><td>Input <strong>plus</strong> output must fit in a fixed token budget</td><td>Long triage prompts plus retrieved docs can overflow and return a 400</td></tr><tr><td>Sampling</td><td><code>temperature</code>/<code>top_p</code> shape randomness; <code>max_tokens</code> and <code>stop</code> end output</td><td>Triage wants low temperature and a hard <code>max_tokens</code> for repeatable labels</td></tr><tr><td>Message roles</td><td><code>system</code>, <code>user</code>, <code>assistant</code> (and <code>tool</code>) separate instructions from data</td><td>User text must never be trusted as a system instruction (prompt injection)</td></tr><tr><td>Pricing</td><td>Output tokens cost several times input; cached input is discounted</td><td>Long outputs dominate the bill; reuse a stable prefix to benefit from caching</td></tr><tr><td>Streaming (SSE)</td><td>Server-sent events send tokens as they are generated</td><td>Faster time-to-first-token in the UI; you must handle partial and broken streams</td></tr><tr><td>Rate limits and errors</td><td>RPM/TPM limits give 429; 5xx is transient; 400/401 are your bug</td><td>Retry 429/5xx with jittered backoff; never retry 400/401</td></tr></tbody></table></div></article><article class="concept"><h3>3. OWASP Top 10 for LLM Applications (2025) at a glance</h3><p>The OWASP list is the shared vocabulary for LLM risks, and you will use it all through the security track. Today you only need the headline of each item:</p>
+<ul><li><strong>LLM01</strong> Prompt Injection, <strong>LLM02</strong> Sensitive Information Disclosure, <strong>LLM03</strong> Supply Chain, <strong>LLM04</strong> Data and Model Poisoning, <strong>LLM05</strong> Improper Output Handling</li><li><strong>LLM06</strong> Excessive Agency, <strong>LLM07</strong> System Prompt Leakage, <strong>LLM08</strong> Vector and Embedding Weaknesses, <strong>LLM09</strong> Misinformation, <strong>LLM10</strong> Unbounded Consumption</li></ul>
+<p>Week 1 already touched three of them: role separation (LLM01), <code>uv.lock</code> and gitleaks (LLM03) and today&#x27;s spend controls (LLM10).</p></article><article class="concept"><h3>4. LLM10 Unbounded Consumption</h3><p>Any caller who can make your app send lots of tokens can drain your budget (<em>denial of wallet</em>), exhaust your rate limit for everyone else or slow the service down. It can be malicious (huge pasted inputs, prompts that ask for endless output, scripted loops) or accidental (a retry bug, an agent stuck in a loop).</p>
+<p>The controls stack in layers, cheapest first:</p><div class="diagram"><svg viewBox="0 0 802 238" role="img" aria-label="Every request passes each gate before money is spent." xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><g style="color:var(--muted)" font-family="system-ui,sans-serif" font-size="13"><rect x="10" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Input size check</text><text x="95.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">reject &gt; N tokens</text><line x1="182" y1="47.0" x2="210" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="214" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="299.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Spend preflight</text><text x="299.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">worst case vs daily cap</text><line x1="386" y1="47.0" x2="414" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="418" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="503.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">API call</text><text x="503.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">max_tokens + timeout</text><line x1="590" y1="47.0" x2="618" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="622" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="707.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Record usage</text><text x="707.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">real cost from usage</text><path d="M707.0,86 V104 H95.0 V120" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="10" y="124" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="149.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Alert</text><text x="95.0" y="165.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">provider spend cap as</text><text x="95.0" y="181.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">backstop</text></g></svg><div class="counter">Every request passes each gate before money is spent.</div></div></article><article class="concept wide"><h3>5. Which control stops what</h3><p>No single control is enough; each closes a different hole.</p><div class="tablewrap"><table><thead><tr><th>Control</th><th>Stops</th><th>Does not stop</th></tr></thead><tbody><tr><td>Hard <code>max_tokens</code></td><td>Runaway or endless output on one call</td><td>Many calls, huge inputs</td></tr><tr><td>Input token limit</td><td>Pasted novels, padding attacks</td><td>Many small calls</td></tr><tr><td>Request timeout</td><td>Hung connections tying up workers</td><td>Cost of calls that finish</td></tr><tr><td>Per-key daily spend cap (app)</td><td>Slow drain across many calls, retry loops</td><td>A leaked key used outside your app</td></tr><tr><td>Provider console budget/alert</td><td>Leaked key used anywhere</td><td>Nothing in real time if it only alerts; set a hard limit where offered</td></tr><tr><td>Rate limit per user (later, in the gateway weeks)</td><td>One user starving others</td><td>Distributed abuse without auth</td></tr><tr><td>gitleaks + secret manager</td><td>Keys leaking through git</td><td>Keys leaked by other routes; rotate on suspicion</td></tr></tbody></table></div></article></div></section>
+<section><h2><span class="ico">🐍</span>guard.py: max_tokens, timeout and a per-key daily spend cap</h2><p>Runs offline with plain Python 3.12 (tested). Call <code>preflight()</code> before each API request and <code>record()</code> with the response&#x27;s real <code>usage</code> after it. Prices are <strong>illustrative</strong>; put your model&#x27;s real prices in <code>PRICE_PER_MTOK</code>. A JSON file is fine for a lab; a shared store like Redis replaces it once Bastion runs more than one process.</p><pre class="code"><code><span class="c"># guard.py  -  Day 5: LLM10 Unbounded Consumption controls (no network, runs offline)</span>
+<span class="k">import</span> datetime <span class="k">as</span> dt
+<span class="k">import</span> json
+<span class="k">import</span> pathlib
+
+MAX_OUTPUT_TOKENS = <span class="n">512</span>          <span class="c"># hard cap sent as max_tokens on EVERY call</span>
+MAX_INPUT_TOKENS = <span class="n">8_000</span>         <span class="c"># reject oversized prompts before paying for them</span>
+TIMEOUT_S = <span class="n">30</span>                   <span class="c"># pass to your HTTP client, e.g. httpx.Timeout(30)</span>
+DAILY_CAP_USD = <span class="n">2.00</span>             <span class="c"># per API key, per UTC day</span>
+PRICE_PER_MTOK = {<span class="s">&quot;in&quot;</span>: <span class="n">0.15</span>, <span class="s">&quot;out&quot;</span>: <span class="n">0.60</span>}   <span class="c"># illustrative prices only</span>
+
+LEDGER = pathlib.Path(<span class="s">&quot;spend.json&quot;</span>)
+
+
+<span class="k">class</span> <span class="f">BudgetExceeded</span>(<span class="b">RuntimeError</span>):
+    <span class="k">pass</span>
+
+
+<span class="k">def</span> <span class="f">_today</span>() -&gt; <span class="b">str</span>:
+    <span class="k">return</span> dt.datetime.now(dt.timezone.utc).date().isoformat()
+
+
+<span class="k">def</span> <span class="f">_load</span>() -&gt; <span class="b">dict</span>:
+    <span class="k">return</span> json.loads(LEDGER.read_text()) <span class="k">if</span> LEDGER.exists() <span class="k">else</span> {}
+
+
+<span class="k">def</span> <span class="f">worst_case_cost</span>(in_tokens: <span class="b">int</span>, max_out: <span class="b">int</span> = MAX_OUTPUT_TOKENS) -&gt; <span class="b">float</span>:
+    <span class="k">return</span> (in_tokens * PRICE_PER_MTOK[<span class="s">&quot;in&quot;</span>] + max_out * PRICE_PER_MTOK[<span class="s">&quot;out&quot;</span>]) / <span class="n">1e6</span>
+
+
+<span class="k">def</span> <span class="f">preflight</span>(key_id: <span class="b">str</span>, in_tokens: <span class="b">int</span>) -&gt; <span class="k">None</span>:
+    <span class="s">&quot;&quot;&quot;Call BEFORE the API request: refuse if it could break a limit.&quot;&quot;&quot;</span>
+    <span class="k">if</span> in_tokens &gt; MAX_INPUT_TOKENS:
+        <span class="k">raise</span> BudgetExceeded(<span class="s">f&quot;</span><span class="s">input </span>{in_tokens}<span class="s"> &gt; </span>{MAX_INPUT_TOKENS}<span class="s"> tokens</span><span class="s">&quot;</span>)
+    spent = _load().get(key_id, {}).get(_today(), <span class="n">0.0</span>)
+    <span class="k">if</span> spent + worst_case_cost(in_tokens) &gt; DAILY_CAP_USD:
+        <span class="k">raise</span> BudgetExceeded(<span class="s">f&quot;</span><span class="s">daily cap $</span>{DAILY_CAP_USD:<span class="s">.2f</span>}<span class="s"> reached for </span>{key_id}<span class="s">&quot;</span>)
+
+
+<span class="k">def</span> <span class="f">record</span>(key_id: <span class="b">str</span>, usage_in: <span class="b">int</span>, usage_out: <span class="b">int</span>) -&gt; <span class="b">float</span>:
+    <span class="s">&quot;&quot;&quot;Call AFTER the response, with the provider&#x27;s real `usage` numbers.&quot;&quot;&quot;</span>
+    cost = (usage_in * PRICE_PER_MTOK[<span class="s">&quot;in&quot;</span>] + usage_out * PRICE_PER_MTOK[<span class="s">&quot;out&quot;</span>]) / <span class="n">1e6</span>
+    led = _load()
+    day = led.setdefault(key_id, {})
+    day[_today()] = <span class="b">round</span>(day.get(_today(), <span class="n">0.0</span>) + cost, <span class="n">6</span>)
+    LEDGER.write_text(json.dumps(led))
+    <span class="k">return</span> cost
+
+
+<span class="k">if</span> <span class="b">__name__</span> == <span class="s">&quot;__main__&quot;</span>:
+    LEDGER.unlink(missing_ok=<span class="k">True</span>)
+    preflight(<span class="s">&quot;dev-key&quot;</span>, <span class="n">1_200</span>)
+    <span class="b">print</span>(<span class="s">&quot;call 1 cost $&quot;</span>, record(<span class="s">&quot;dev-key&quot;</span>, <span class="n">1_200</span>, <span class="n">300</span>))
+    <span class="k">try</span>:
+        preflight(<span class="s">&quot;dev-key&quot;</span>, <span class="n">50_000</span>)
+    <span class="k">except</span> BudgetExceeded <span class="k">as</span> e:
+        <span class="b">print</span>(<span class="s">&quot;blocked:&quot;</span>, e)
+    _l = {<span class="s">&quot;dev-key&quot;</span>: {_today(): <span class="n">1.9999</span>}}
+    LEDGER.write_text(json.dumps(_l))
+    <span class="k">try</span>:
+        preflight(<span class="s">&quot;dev-key&quot;</span>, <span class="n">1_000</span>)
+    <span class="k">except</span> BudgetExceeded <span class="k">as</span> e:
+        <span class="b">print</span>(<span class="s">&quot;blocked:&quot;</span>, e)</code></pre><ul><li><code>preflight</code> blocks <em>before</em> you pay, using the worst case (input plus the full <code>max_tokens</code>).</li><li><code>record</code> uses the provider&#x27;s <code>usage</code> numbers, because local token counts are only estimates for non-OpenAI models.</li><li>The day is keyed on UTC so the cap resets at a predictable time.</li><li>Running it prints one recorded cost and two blocked requests: one for oversized input, one for the daily cap.</li></ul></section>
+<section><h2><span class="ico">✅</span>Hands-on task</h2><p>30 minutes. Recall without notes (≈10 min). Check against the cards and log gaps (≈5 min). Skim the OWASP Top 10 overview (≈10 min; the full read is an hour, so finish it at the weekend). Copy <code>guard.py</code> into <code>src/bastion/</code> or add it to Saturday&#x27;s TODO (≈5 min).</p><ul class="check"><li><input type="checkbox" id="t0" aria-label="task 1"><label for="t0">Write two-sentence answers for all seven concepts without notes, and mark each green, amber or red</label></li><li><input type="checkbox" id="t1" aria-label="task 2"><label for="t1">Check with the flip cards; log ambers and reds under <em>Gaps</em> in <code>notes/week-01.md</code></label></li><li><input type="checkbox" id="t2" aria-label="task 3"><label for="t2">Skim the OWASP Top 10 for LLM Applications 2025 overview; read the LLM10 page in full</label></li><li><input type="checkbox" id="t3" aria-label="task 4"><label for="t3">Add <code>guard.py</code> to <code>src/bastion/</code> (or add it to <code>notes/TODO-saturday.md</code> with a concrete step)</label></li><li><input type="checkbox" id="t4" aria-label="task 5"><label for="t4">Confirm a hard spend limit or budget alert is set in your provider console</label></li><li><input type="checkbox" id="t5" aria-label="task 6"><label for="t5">Confirm gitleaks is in <code>.pre-commit-config.yaml</code> and blocked Thursday&#x27;s fake-key test</label></li></ul><div class="counter" id="checkCount"></div></section>
+<div class="callout sec"><h2>🛡 Security lens</h2><p><strong>Denial of wallet is the first attack every LLM app faces.</strong> It needs no clever prompt, just volume. Treat <code>max_tokens</code>, timeouts and spend caps as required settings, not tuning. A leaked key bypasses every app-side control, so pair the app cap with a provider-side limit and rotate any key that touched git, a log or a chat.</p></div>
+<div class="callout arch"><h2>🏛 Architecture track</h2><p>This week&#x27;s architecture track (Tuesday 2026-10-20): <strong>What architects do; quality attributes (scalability, availability, latency, security, cost, operability)</strong>. Exercise: List the top 5 quality attributes for Bastion triage and rank them; note one tradeoff between two of them.</p></div>
+<section><h2><span class="ico">📚</span>Resources</h2><ul class="res"><li><a href="https://genai.owasp.org/llm-top-10/" target="_blank" rel="noopener">OWASP Top 10 for LLM Applications 2025</a></li><li><a href="https://genai.owasp.org/llmrisk/llm102025-unbounded-consumption/" target="_blank" rel="noopener">OWASP LLM10:2025 Unbounded Consumption</a></li><li><a href="https://github.com/gitleaks/gitleaks" target="_blank" rel="noopener">gitleaks</a></li><li><a href="https://html.spec.whatwg.org/multipage/server-sent-events.html" target="_blank" rel="noopener">HTML spec: server-sent events</a></li></ul></section>
+<section><h2><span class="ico">🃏</span>Recall quiz <span class="counter">(tap a card to flip)</span></h2><div class="quiz"><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why does tokenisation matter for security, not only cost?</div><small>Q1 · tap to reveal</small></div><div class="face back"><div>Obfuscated text (leetspeak, homoglyphs, Base64) tokenises differently, so it can slip past keyword filters while the model still understands it, and it inflates token counts and cost.</div><small>A1</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Your prompt is 120k tokens and the window is 128k. You set max_tokens to 16k. What happens?</div><small>Q2 · tap to reveal</small></div><div class="face back"><div>Input plus requested output exceeds the window, so the API returns a 400 (or truncates output, depending on provider). Trim or summarise the input; don&#x27;t retry as-is.</div><small>A2</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Which sampling settings suit a triage classifier, and why?</div><small>Q3 · tap to reveal</small></div><div class="face back"><div>Low temperature (around 0) for repeatable labels, a small hard <code>max_tokens</code>, and stop sequences or structured output so it ends cleanly.</div><small>A3</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why must user text never go in the system message?</div><small>Q4 · tap to reveal</small></div><div class="face back"><div>The system role carries trusted instructions. Mixing untrusted input into it makes prompt injection (LLM01) far easier.</div><small>A4</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why do output tokens usually dominate the bill?</div><small>Q5 · tap to reveal</small></div><div class="face back"><div>They are priced several times higher than input and are generated one at a time, so long answers cost the most. Cached input is cheaper still.</div><small>A5</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What extra work does streaming over SSE create for your client?</div><small>Q6 · tap to reveal</small></div><div class="face back"><div>Handling partial chunks, assembling the final message, detecting a broken or stalled stream (timeouts) and getting usage at the end.</div><small>A6</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Which errors do you retry, and how?</div><small>Q7 · tap to reveal</small></div><div class="face back"><div>429 and 5xx, with exponential backoff plus jitter and a retry cap, honouring <code>Retry-After</code>. Never retry 400 or 401; fix the request or key.</div><small>A7</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Name three LLM10 controls and what each stops.</div><small>Q8 · tap to reveal</small></div><div class="face back"><div>Hard <code>max_tokens</code> (runaway output), input token limit (huge inputs), per-key daily spend cap (slow drain and retry loops). Timeouts stop hung calls.</div><small>A8</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why isn&#x27;t an app-side spend cap enough on its own?</div><small>Q9 · tap to reveal</small></div><div class="face back"><div>A leaked key can be used outside your app. You also need a provider-side limit or alert, secret management, and rotation.</div><small>A9</small></div></div></button></div></section>
+<section class="tomorrow"><h2><span class="ico">🔭</span>Tomorrow</h2><p>Saturday deep-work lab (about 3 hours): build Bastion&#x27;s first LLM client with token budgeting, sampling settings, streaming, retries and today&#x27;s spend guard.</p></section>
+<footer>Generated from the AI Engineering Roadmap daily plan · Day 5 of 203 · Times in Asia/Kolkata</footer>
+</div>
+<script>
+(function(){
+  var root=document.documentElement, key='bastion-theme';
+  var saved=localStorage.getItem(key);
+  var dark=saved?saved==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  root.setAttribute('data-theme',dark?'dark':'light');
+  var btn=document.getElementById('themeToggle');
+  function label(){btn.textContent=root.getAttribute('data-theme')==='dark'?'☀ Light':'☾ Dark';}
+  if(btn){label();btn.addEventListener('click',function(){var d=root.getAttribute('data-theme')==='dark'?'light':'dark';root.setAttribute('data-theme',d);localStorage.setItem(key,d);label();rerenderMermaid();});}
+  // checklist persistence
+  var day=document.getElementById('app').dataset.day;
+  var boxes=document.querySelectorAll('.check input[type=checkbox]');
+  function count(){var n=0;boxes.forEach(function(b){if(b.checked)n++;});var c=document.getElementById('checkCount');if(c)c.textContent=n+' / '+boxes.length+' done';}
+  boxes.forEach(function(b,i){var k='bastion-day-'+day+'-task-'+i;b.checked=localStorage.getItem(k)==='1';b.closest('li').classList.toggle('done',b.checked);
+    b.addEventListener('change',function(){localStorage.setItem(k,b.checked?'1':'0');b.closest('li').classList.toggle('done',b.checked);count();});});
+  count();
+  // flip cards
+  document.querySelectorAll('.card').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('flipped');c.setAttribute('aria-pressed',c.classList.contains('flipped'));});});
+  // mermaid (optional, CDN) with graceful fallback
+  var hasMermaid=document.querySelector('.mermaid');
+  window.rerenderMermaid=function(){};
+  if(!hasMermaid)return;
+  var sources=[];document.querySelectorAll('.mermaid').forEach(function(el){sources.push(el.textContent);});
+  function fallback(){document.body.classList.add('no-mermaid');}
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+  s.async=true;
+  var timer=setTimeout(fallback,6000);
+  s.onload=function(){clearTimeout(timer);try{render();}catch(e){fallback();}};
+  s.onerror=function(){clearTimeout(timer);fallback();};
+  function render(){
+    var d=root.getAttribute('data-theme')==='dark';
+    window.mermaid.initialize({startOnLoad:false,theme:d?'dark':'default',securityLevel:'strict',fontFamily:'system-ui, sans-serif'});
+    document.querySelectorAll('.mermaid').forEach(function(el,i){el.removeAttribute('data-processed');el.textContent=sources[i];});
+    window.mermaid.run({querySelector:'.mermaid'}).catch(fallback);
+  }
+  window.rerenderMermaid=function(){if(window.mermaid){try{render();}catch(e){fallback();}}};
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>

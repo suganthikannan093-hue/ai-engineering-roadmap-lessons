@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 22: Transformer internals: concepts I</title>
+<script>(function(){try{var s=localStorage.getItem('bastion-theme');var d=s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();</script>
+<style>
+:root{--bg:#f7f8fb;--card:#ffffff;--ink:#1b2130;--muted:#5d6678;--line:#e3e7ef;--accent:#2f6fec;--accent-soft:#e8f0ff;
+--sec:#c0392b;--sec-soft:#fdecea;--arch:#7a4ce0;--arch-soft:#f1ebff;--ok:#1f9d63;--ok-soft:#e6f6ee;--warn:#b7791f;--warn-soft:#fff6e0;
+--code-bg:#f4f6fa;--kw:#8a2be2;--str:#0b7a3e;--num:#b35900;--com:#7b8494;--fn:#1f5fbf;--bi:#a0306a;--shadow:0 1px 2px rgba(20,30,60,.06),0 4px 14px rgba(20,30,60,.06)}
+[data-theme="dark"]{--bg:#0f131a;--card:#171c26;--ink:#e6e9f0;--muted:#9aa3b5;--line:#2a3140;--accent:#6ea0ff;--accent-soft:#1c2740;
+--sec:#ff7b6b;--sec-soft:#3a1f1d;--arch:#b597ff;--arch-soft:#271f3d;--ok:#4fd39a;--ok-soft:#173027;--warn:#f0c060;--warn-soft:#352b14;
+--code-bg:#11161f;--kw:#c792ea;--str:#a5e075;--num:#f78c6c;--com:#6b7689;--fn:#82aaff;--bi:#ff9cac;--shadow:none}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+header.hero{background:linear-gradient(135deg,var(--accent) 0%,#5b3fd6 100%);color:#fff;border-radius:18px;padding:22px 22px 18px;box-shadow:var(--shadow);position:relative}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;opacity:.95}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.18);white-space:nowrap}
+.hero h1{margin:10px 0 6px;font-size:clamp(22px,4vw,30px);line-height:1.2}
+.hero .sub{opacity:.9;font-size:14px}
+.bar{height:8px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;margin-top:12px}
+.bar>span{display:block;height:100%;background:#fff;border-radius:99px}
+.barlabel{display:flex;justify-content:space-between;font-size:12px;margin-top:4px;opacity:.9}
+.toggle{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:13px}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:16px 0;box-shadow:var(--shadow)}
+section>h2{margin:0 0 10px;font-size:19px;display:flex;align-items:center;gap:8px}
+.ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:15px}
+.tldr{border-left:5px solid var(--accent)}
+.tldr p{margin:.3em 0}
+ul.obj{margin:.4em 0 0;padding-left:1.2em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.concept{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--card)}
+.concept h3{margin:0 0 6px;font-size:16.5px}
+.concept p{margin:.45em 0}
+.concept.wide{grid-column:1/-1}
+.analogy{background:var(--warn-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+.analogy b{color:var(--warn)}
+.diagram{margin:10px 0;overflow-x:auto}
+.diagram svg{max-width:100%;height:auto;display:block}
+.diagram svg.bars{max-width:620px}
+blockquote{margin:.6em 0;padding:8px 14px;border-left:4px solid var(--line);color:var(--muted);font-style:italic}
+.mermaid-fallback{display:none}
+.no-mermaid .mermaid{display:none}
+.no-mermaid .mermaid-fallback{display:block}
+.tablewrap{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft);color:var(--ink)}
+tr:nth-child(even) td{background:color-mix(in srgb,var(--card) 94%,var(--ink) 6%)}
+.rule{background:var(--ok-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+pre.code{background:var(--code-bg);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;margin:8px 0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:.92em;background:var(--code-bg);padding:1px 5px;border-radius:5px}
+pre code{background:none;padding:0}
+.k{color:var(--kw);font-weight:600}.s{color:var(--str)}.n{color:var(--num)}.c{color:var(--com);font-style:italic}.f{color:var(--fn)}.b{color:var(--bi)}
+.check{list-style:none;padding:0;margin:6px 0}
+.check li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin:6px 0}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--ok);flex:none}
+.check li.done{background:var(--ok-soft);text-decoration:line-through;color:var(--muted)}
+.counter{font-size:13px;color:var(--muted)}
+.callout{border-radius:14px;padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout h2{margin:0 0 6px;font-size:17px}
+.callout.sec{background:var(--sec-soft);border-left:6px solid var(--sec)}
+.callout.sec h2{color:var(--sec)}
+.callout.arch{background:var(--arch-soft);border-left:6px solid var(--arch)}
+.callout.arch h2{color:var(--arch)}
+.callout p{margin:.4em 0}
+.res li{margin:5px 0}
+.quiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{perspective:1000px;cursor:pointer;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit}
+.card .inner{display:grid;transition:transform .5s;transform-style:preserve-3d;min-height:130px}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;padding:14px;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.front{background:var(--accent-soft)}
+.back{background:var(--ok-soft);transform:rotateY(180deg)}
+.face small{color:var(--muted);font-size:12px;margin-top:8px}
+.tomorrow{border-left:5px solid var(--arch)}
+footer{color:var(--muted);font-size:12.5px;text-align:center;padding:10px 0 30px}
+@media (max-width:600px){.wrap{padding:10px}section{padding:14px}header.hero{padding:18px 16px}.toggle{top:10px;right:10px}}
+@media print{.toggle{display:none}.card .inner{transform:none!important}.back{transform:none;margin-top:6px}.face{backface-visibility:visible}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" data-day="22">
+<header class="hero"><button class="toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">☾ Dark</button>
+<div class="meta"><span class="pill">Day 22 / 203</span><span class="pill">Monday 2026-11-09</span><span class="pill">Week 4 / 29</span><span class="pill">⏱ 45 min</span><span class="pill">concepts</span></div>
+<h1>Transformer internals: concepts I</h1>
+<div class="sub">Phase 2: Model fundamentals and fine-tuning · Transformer internals · Guides G3</div>
+<div class="bar" aria-label="Roadmap progress"><span style="width:10.84%"></span></div>
+<div class="barlabel"><span>Roadmap progress 10.8%</span><span>Ends Sun 9 May 2027</span></div></header>
+<section class="tldr"><h2><span class="ico">⚡</span>Today in 30 seconds</h2><p>A transformer turns text into <strong>token embeddings</strong>, mixes information between tokens with <strong>self-attention</strong>, and repeats this in layers on a shared <strong>residual stream</strong>. At the end it outputs <strong>logits</strong> for the next token; a <strong>decoding strategy</strong> picks one, and the <strong>KV cache</strong> avoids recomputing past work.</p>
+<p>Today is concept reading: build one clear mental model, then tie each piece to Bastion. Plan about 45 minutes.</p><p><strong>By the end of today you can:</strong></p><ul class="obj"><li>Explain the path from tokens to next-token logits in your own words</li><li>Describe self-attention (Q, K, V), multi-head attention and why positional encoding is needed</li><li>Explain the KV cache and name the main decoding strategies</li><li>Skim G3 and note one choice relevant to Bastion</li></ul></section>
+<section><h2><span class="ico">🧠</span>Concepts</h2><div class="grid"><article class="concept wide"><h3>1. The big picture</h3><p>Text is split into tokens, each token becomes a vector, a stack of layers refines the vectors, and the last position produces a score for every vocabulary token.</p><div class="diagram"><svg viewBox="0 0 802 238" role="img" aria-label="Tokens to next-token choice." xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><g style="color:var(--muted)" font-family="system-ui,sans-serif" font-size="13"><rect x="10" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Tokens</text><text x="95.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">text to ids</text><line x1="182" y1="47.0" x2="210" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="214" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="299.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Embeddings</text><text x="299.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">id to vector</text><line x1="386" y1="47.0" x2="414" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="418" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="503.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">+ Position</text><text x="503.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">order info</text><line x1="590" y1="47.0" x2="618" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="622" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="707.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">N x layers</text><text x="707.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">attention + MLP</text><path d="M707.0,86 V104 H95.0 V120" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="10" y="124" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="157.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Logits</text><text x="95.0" y="173.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">score per token</text><line x1="182" y1="161.0" x2="210" y2="161.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="214" y="124" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="299.0" y="157.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Decode</text><text x="299.0" y="173.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">pick next token</text></g></svg><div class="counter">Tokens to next-token choice.</div></div></article><article class="concept wide"><h3>2. Embeddings and positional encoding</h3><p>An <strong>embedding</strong> is a learned vector for each token id; similar usage tends to give nearby vectors. Attention itself has no sense of order, so <strong>positional encoding</strong> (sinusoidal in the original paper; learned or rotary in many newer models) injects position.</p>
+<blockquote>Without position, &#x27;dog bites man&#x27; and &#x27;man bites dog&#x27; look the same to attention.</blockquote>
+<p><strong>Bastion example:</strong> a triage transcript&#x27;s wording and order both matter, and a long transcript uses up context window tokens, not characters.</p></article><article class="concept wide"><h3>3. Self-attention: Q, K, V</h3><p>Each token makes a <strong>query</strong> (what I look for), a <strong>key</strong> (what I offer) and a <strong>value</strong> (what I pass on). Score = query dot key, scaled by sqrt(d), then <strong>softmax</strong> gives weights, and the output is the weighted sum of values.</p>
+<ul><li>In decoder models a <strong>causal mask</strong> stops a token seeing later tokens.</li><li>Cost grows with the square of sequence length, which is why long contexts are expensive.</li></ul><div class="diagram"><svg viewBox="0 0 802 238" role="img" aria-label="One attention head." xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><g style="color:var(--muted)" font-family="system-ui,sans-serif" font-size="13"><rect x="10" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Q, K</text><text x="95.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">dot product</text><line x1="182" y1="47.0" x2="210" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="214" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="299.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Scale</text><text x="299.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">divide by sqrt d</text><line x1="386" y1="47.0" x2="414" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="418" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="503.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Mask</text><text x="503.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">causal</text><line x1="590" y1="47.0" x2="618" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="622" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="707.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Softmax</text><text x="707.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">weights sum to 1</text><path d="M707.0,86 V104 H95.0 V120" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="10" y="124" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="157.0" text-anchor="middle" font-weight="700" fill="var(--ink)">x V</text><text x="95.0" y="173.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">weighted sum</text></g></svg><div class="counter">One attention head.</div></div></article><article class="concept wide"><h3>4. Multi-head attention and the residual stream</h3><p><strong>Multi-head attention</strong> runs several smaller attention heads in parallel, so different heads can track different relations (for example syntax versus reference). Outputs are concatenated and projected.</p>
+<p>The <strong>residual stream</strong> is the running vector per token: each attention or MLP block <em>adds</em> its output to it (<code>x = x + block(x)</code>). Think of it as a shared notebook that every layer reads from and writes to.</p></article><article class="concept wide"><h3>5. Logits, next-token prediction and decoding</h3><p>The final vector is projected to <strong>logits</strong>, one score per vocabulary token. Softmax turns them into probabilities. The model only ever predicts the next token; text is produced by repeating.</p><div class="tablewrap"><table><thead><tr><th>Strategy</th><th>How it picks</th><th>Use when</th></tr></thead><tbody><tr><td>Greedy</td><td>Highest probability</td><td>Deterministic, extraction, classification</td></tr><tr><td>Temperature</td><td>Rescales logits before softmax (low = sharper)</td><td>Tuning creativity versus consistency</td></tr><tr><td>Top-k</td><td>Sample from k most likely</td><td>Cut off the long tail</td></tr><tr><td>Top-p (nucleus)</td><td>Sample from smallest set with cumulative p</td><td>Adaptive tail cutoff</td></tr><tr><td>Beam search</td><td>Keep several best partial sequences</td><td>Translation-style tasks; less common for chat</td></tr></tbody></table></div></article><article class="concept"><h3>6. KV cache</h3><p>When generating token n+1, the keys and values of tokens 1..n are unchanged. The <strong>KV cache</strong> stores them so each step only computes the new token&#x27;s Q, K and V.</p>
+<ul><li>Big speed-up for generation.</li><li>Memory grows with sequence length, layers and batch size, so it often limits serving capacity (you will meet this again in model serving).</li></ul>
+<p><strong>Bastion example:</strong> a long shared system prompt is a good candidate for prefix caching where your provider supports it.</p></article><article class="concept"><h3>7. Bastion connections</h3><ul><li><strong>Structured verdicts:</strong> use low temperature or greedy decoding for consistent JSON.</li><li><strong>Prompt injection:</strong> attention treats all context tokens alike, with no hard boundary between instructions and data. That is why input separation and validation matter.</li><li><strong>Cost:</strong> you pay for tokens in and out; context length drives latency and memory.</li></ul></article></div></section>
+<section><h2><span class="ico">⚖</span>When to choose which</h2><h3>G3. Adapting models</h3><p>Skim G3 and note which choice matters most for Bastion&#x27;s cost and latency.</p><div class="tablewrap"><table><thead><tr><th>Option</th><th>How it works</th><th>Pros</th><th>Cons</th><th>Choose when</th></tr></thead><tbody><tr><td>Prompting only</td><td>Instructions and examples in context</td><td>Zero training; instant iteration</td><td>Limited by context and base behaviour</td><td>Always try first</td></tr><tr><td>RAG</td><td>Retrieve relevant documents at query time and put them in context</td><td>Fresh, citable, permission-aware knowledge; no training</td><td>Retrieval quality is the bottleneck; injection surface</td><td>Knowledge that changes or must respect access control</td></tr><tr><td>Long context</td><td>Put whole documents in the window</td><td>Simple; no retrieval pipeline</td><td>Cost and latency per call; attention degrades mid-context</td><td>Few, bounded documents per request; analysis of one large artefact</td></tr><tr><td>Full fine-tuning</td><td>Update all weights on your data</td><td>Maximum adaptation</td><td>Expensive; needs lots of data; risk of forgetting and safety regression</td><td>Rarely; large orgs with big datasets and strong reasons</td></tr><tr><td>LoRA</td><td>Train small low-rank adapter matrices, freeze base weights</td><td>Cheap, small artefacts, swappable adapters</td><td>Slightly less capacity than full FT</td><td>Teaching format, style, task behaviour, classification</td></tr><tr><td>QLoRA</td><td>LoRA on a 4-bit quantised base model</td><td>Fine-tune 7-70B models on one GPU</td><td>Slower training; quantisation noise</td><td>Budget fine-tuning of mid-size models</td></tr><tr><td>Other adapters (prefix/prompt tuning, IA3)</td><td>Learn small extra vectors or scaling factors</td><td>Tiny parameter counts</td><td>Usually weaker than LoRA for LLMs</td><td>Very constrained memory or many tenants&#x27; adapters</td></tr><tr><td>RLHF (PPO with reward model)</td><td>Train a reward model on human preferences, optimise the policy against it</td><td>Strong alignment to preferences</td><td>Complex, unstable, costly</td><td>Frontier-lab-scale alignment work</td></tr><tr><td>DPO</td><td>Optimise directly on preference pairs (chosen vs rejected), no reward model</td><td>Simpler and stable; popular default for preference tuning</td><td>Needs good preference pairs</td><td>Steering tone, refusals, helpfulness with pairwise data</td></tr><tr><td>ORPO</td><td>Combines SFT and preference optimisation in one step without a reference model</td><td>One stage, cheaper</td><td>Newer, less battle-tested</td><td>Small teams doing SFT + preference in one pass</td></tr><tr><td>GRPO</td><td>RL using group-relative rewards from multiple sampled answers, no value model</td><td>Effective for verifiable tasks (maths, code)</td><td>Needs reward functions; RL complexity</td><td>Training reasoning on tasks with automatic checkers</td></tr><tr><td>Distillation</td><td>A strong teacher labels data; a smaller student learns from it</td><td>Big cost/latency reduction</td><td>Student inherits teacher errors; check provider terms on using outputs</td><td>High-volume narrow task once a big model performs it well</td></tr><tr><td>Continued pre-training</td><td>More next-token training on a large domain corpus</td><td>Deep domain fluency (language, jargon)</td><td>Expensive; needs lots of text; can erode instruction following</td><td>Very specialised domains with large unlabelled corpora</td></tr></tbody></table></div><div class="rule"><strong>Default:</strong> prompting, then RAG for knowledge, then LoRA/QLoRA for behaviour or cost, then distillation for scale. Fine-tuning rarely adds reliable new facts; RAG usually wins for knowledge.</div><p class="counter">Full guide: roadmap Section 9, <a href="../roadmap.html#g3-adapting-models">G3 Adapting models</a>.</p></section>
+<section><h2><span class="ico">🐍</span>attention.py: toy attention and temperature</h2><p>Standard library only; output verified. Tiny numbers, but the same maths as a real head: scaled dot product, causal mask, softmax, then temperature on logits.</p><pre class="code"><code><span class="c"># attention.py - run: python3 attention.py  (standard library only)</span>
+<span class="k">import</span> math
+
+<span class="k">def</span> <span class="f">softmax</span>(xs):
+    m = <span class="b">max</span>(xs)
+    es = [math.exp(x - m) <span class="k">for</span> x <span class="k">in</span> xs]
+    s = <span class="b">sum</span>(es)
+    <span class="k">return</span> [e / s <span class="k">for</span> e <span class="k">in</span> es]
+
+<span class="k">def</span> <span class="f">dot</span>(a, b):
+    <span class="k">return</span> <span class="b">sum</span>(x * y <span class="k">for</span> x, y <span class="k">in</span> <span class="b">zip</span>(a, b))
+
+<span class="c"># 3 tokens, 2-dim toy vectors (query, key, value per token)</span>
+Q = [[<span class="n">1.0</span>, <span class="n">0.0</span>], [<span class="n">0.0</span>, <span class="n">1.0</span>], [<span class="n">1.0</span>, <span class="n">1.0</span>]]
+K = [[<span class="n">1.0</span>, <span class="n">0.0</span>], [<span class="n">0.0</span>, <span class="n">1.0</span>], [<span class="n">1.0</span>, <span class="n">1.0</span>]]
+V = [[<span class="n">1.0</span>, <span class="n">2.0</span>], [<span class="n">3.0</span>, <span class="n">4.0</span>], [<span class="n">5.0</span>, <span class="n">6.0</span>]]
+d = <span class="n">2</span>
+
+<span class="k">for</span> i, q <span class="k">in</span> <span class="b">enumerate</span>(Q):
+    scores = [dot(q, k) / math.sqrt(d) <span class="k">for</span> k <span class="k">in</span> K]
+    <span class="c"># causal mask: token i may only look at tokens 0..i</span>
+    scores = [s <span class="k">if</span> j &lt;= i <span class="k">else</span> <span class="b">float</span>(<span class="s">&#x27;-inf&#x27;</span>) <span class="k">for</span> j, s <span class="k">in</span> <span class="b">enumerate</span>(scores)]
+    w = softmax(scores)
+    out = [<span class="b">sum</span>(w[j] * V[j][c] <span class="k">for</span> j <span class="k">in</span> <span class="b">range</span>(<span class="n">3</span>)) <span class="k">for</span> c <span class="k">in</span> <span class="b">range</span>(<span class="n">2</span>)]
+    <span class="b">print</span>(<span class="s">f&quot;</span><span class="s">token </span>{i}<span class="s">: weights=</span>{[<span class="b">round</span>(x, <span class="n">3</span>) <span class="k">for</span> x <span class="k">in</span> w]}<span class="s"> output=</span>{[<span class="b">round</span>(x, <span class="n">3</span>) <span class="k">for</span> x <span class="k">in</span> out]}<span class="s">&quot;</span>)
+
+<span class="c"># next-token logits -&gt; probabilities, with temperature</span>
+logits = {<span class="s">&#x27;cat&#x27;</span>: <span class="n">2.0</span>, <span class="s">&#x27;dog&#x27;</span>: <span class="n">1.0</span>, <span class="s">&#x27;car&#x27;</span>: <span class="n">0.1</span>}
+<span class="k">for</span> T <span class="k">in</span> (<span class="n">0.5</span>, <span class="n">1.0</span>, <span class="n">2.0</span>):
+    p = softmax([v / T <span class="k">for</span> v <span class="k">in</span> logits.values()])
+    <span class="b">print</span>(<span class="s">&#x27;T=%.1f&#x27;</span> % T, {k: <span class="b">round</span>(x, <span class="n">3</span>) <span class="k">for</span> k, x <span class="k">in</span> <span class="b">zip</span>(logits, p)})</code></pre><p>Token 0 can only see itself (weight 1.0); later tokens spread weight over earlier ones. Lower temperature sharpens the distribution (cat 0.864 at T=0.5 versus 0.502 at T=2.0).</p></section>
+<section><h2><span class="ico">✅</span>Hands-on task</h2><p>Read the two resources, then write your note.</p><ul class="check"><li><input type="checkbox" id="t0" aria-label="task 1"><label for="t0">Read The Illustrated Transformer</label></li><li><input type="checkbox" id="t1" aria-label="task 2"><label for="t1">Skim Attention Is All You Need (section 3 is enough)</label></li><li><input type="checkbox" id="t2" aria-label="task 3"><label for="t2">Write bastion/notes/week-04.md with a section per concept and one Bastion example each</label></li><li><input type="checkbox" id="t3" aria-label="task 4"><label for="t3">Answer the recall prompts from memory, then check</label></li><li><input type="checkbox" id="t4" aria-label="task 5"><label for="t4">Commit the note</label></li></ul><div class="counter" id="checkCount"></div></section>
+<div class="callout sec"><h2>🛡 Security lens</h2><p>The model sees one flat token stream — no hardware boundary between instructions and data. Read Greshake et al., indirect prompt injection: <a href="https://arxiv.org/abs/2302.12173" target="_blank" rel="noopener">https://arxiv.org/abs/2302.12173</a>.</p></div>
+<div class="callout arch"><h2>🏛 Architecture track</h2><p>This week&#x27;s architecture track (Tuesday 2026-11-10): <strong>Data-intensive systems: reliability, scalability, maintainability</strong>. Exercise: Rewrite Bastion&#x27;s non-functional requirements using DDIA&#x27;s reliability/scalability/maintainability vocabulary.</p></div>
+<section><h2><span class="ico">📚</span>Resources</h2><ul class="res"><li>Jay Alammar, The Illustrated Transformer: <a href="https://jalammar.github.io/illustrated-transformer/" target="_blank" rel="noopener">https://jalammar.github.io/illustrated-transformer/</a></li><li>Vaswani et al., Attention Is All You Need: <a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">https://arxiv.org/abs/1706.03762</a></li></ul></section>
+<section><h2><span class="ico">🃏</span>Recall quiz <span class="counter">(tap a card to flip)</span></h2><div class="quiz"><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why do transformers need positional encoding?</div><small>Q1 · tap to reveal</small></div><div class="face back"><div>Self-attention is order-agnostic; position information must be added to the embeddings so word order is represented.</div><small>A1</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What does the KV cache store and why?</div><small>Q2 · tap to reveal</small></div><div class="face back"><div>The keys and values of past tokens, so each new token only computes its own Q, K, V instead of reprocessing the whole sequence.</div><small>A2</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What does lowering temperature do?</div><small>Q3 · tap to reveal</small></div><div class="face back"><div>Divides logits by a smaller T before softmax, making the distribution sharper so likely tokens dominate.</div><small>A3</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What is the residual stream?</div><small>Q4 · tap to reveal</small></div><div class="face back"><div>The per-token vector that each block adds its output to (x = x + block(x)), read and written by every layer.</div><small>A4</small></div></div></button></div></section>
+<section class="tomorrow"><h2><span class="ico">🔭</span>Tomorrow</h2><p>Transformer internals: concepts II.</p></section>
+<footer>Generated from the AI Engineering Roadmap daily plan · Day 22 of 203 · Times in Asia/Kolkata</footer>
+</div>
+<script>
+(function(){
+  var root=document.documentElement, key='bastion-theme';
+  var saved=localStorage.getItem(key);
+  var dark=saved?saved==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  root.setAttribute('data-theme',dark?'dark':'light');
+  var btn=document.getElementById('themeToggle');
+  function label(){btn.textContent=root.getAttribute('data-theme')==='dark'?'☀ Light':'☾ Dark';}
+  if(btn){label();btn.addEventListener('click',function(){var d=root.getAttribute('data-theme')==='dark'?'light':'dark';root.setAttribute('data-theme',d);localStorage.setItem(key,d);label();rerenderMermaid();});}
+  // checklist persistence
+  var day=document.getElementById('app').dataset.day;
+  var boxes=document.querySelectorAll('.check input[type=checkbox]');
+  function count(){var n=0;boxes.forEach(function(b){if(b.checked)n++;});var c=document.getElementById('checkCount');if(c)c.textContent=n+' / '+boxes.length+' done';}
+  boxes.forEach(function(b,i){var k='bastion-day-'+day+'-task-'+i;b.checked=localStorage.getItem(k)==='1';b.closest('li').classList.toggle('done',b.checked);
+    b.addEventListener('change',function(){localStorage.setItem(k,b.checked?'1':'0');b.closest('li').classList.toggle('done',b.checked);count();});});
+  count();
+  // flip cards
+  document.querySelectorAll('.card').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('flipped');c.setAttribute('aria-pressed',c.classList.contains('flipped'));});});
+  // mermaid (optional, CDN) with graceful fallback
+  var hasMermaid=document.querySelector('.mermaid');
+  window.rerenderMermaid=function(){};
+  if(!hasMermaid)return;
+  var sources=[];document.querySelectorAll('.mermaid').forEach(function(el){sources.push(el.textContent);});
+  function fallback(){document.body.classList.add('no-mermaid');}
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+  s.async=true;
+  var timer=setTimeout(fallback,6000);
+  s.onload=function(){clearTimeout(timer);try{render();}catch(e){fallback();}};
+  s.onerror=function(){clearTimeout(timer);fallback();};
+  function render(){
+    var d=root.getAttribute('data-theme')==='dark';
+    window.mermaid.initialize({startOnLoad:false,theme:d?'dark':'default',securityLevel:'strict',fontFamily:'system-ui, sans-serif'});
+    document.querySelectorAll('.mermaid').forEach(function(el,i){el.removeAttribute('data-processed');el.textContent=sources[i];});
+    window.mermaid.run({querySelector:'.mermaid'}).catch(fallback);
+  }
+  window.rerenderMermaid=function(){if(window.mermaid){try{render();}catch(e){fallback();}}};
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>

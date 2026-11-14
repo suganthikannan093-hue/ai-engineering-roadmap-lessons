@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 19: Recall + security lens: lock in Week 3 and harden the API (ADR-001)</title>
+<script>(function(){try{var s=localStorage.getItem('bastion-theme');var d=s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();</script>
+<style>
+:root{--bg:#f7f8fb;--card:#ffffff;--ink:#1b2130;--muted:#5d6678;--line:#e3e7ef;--accent:#2f6fec;--accent-soft:#e8f0ff;
+--sec:#c0392b;--sec-soft:#fdecea;--arch:#7a4ce0;--arch-soft:#f1ebff;--ok:#1f9d63;--ok-soft:#e6f6ee;--warn:#b7791f;--warn-soft:#fff6e0;
+--code-bg:#f4f6fa;--kw:#8a2be2;--str:#0b7a3e;--num:#b35900;--com:#7b8494;--fn:#1f5fbf;--bi:#a0306a;--shadow:0 1px 2px rgba(20,30,60,.06),0 4px 14px rgba(20,30,60,.06)}
+[data-theme="dark"]{--bg:#0f131a;--card:#171c26;--ink:#e6e9f0;--muted:#9aa3b5;--line:#2a3140;--accent:#6ea0ff;--accent-soft:#1c2740;
+--sec:#ff7b6b;--sec-soft:#3a1f1d;--arch:#b597ff;--arch-soft:#271f3d;--ok:#4fd39a;--ok-soft:#173027;--warn:#f0c060;--warn-soft:#352b14;
+--code-bg:#11161f;--kw:#c792ea;--str:#a5e075;--num:#f78c6c;--com:#6b7689;--fn:#82aaff;--bi:#ff9cac;--shadow:none}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+header.hero{background:linear-gradient(135deg,var(--accent) 0%,#5b3fd6 100%);color:#fff;border-radius:18px;padding:22px 22px 18px;box-shadow:var(--shadow);position:relative}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;opacity:.95}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.18);white-space:nowrap}
+.hero h1{margin:10px 0 6px;font-size:clamp(22px,4vw,30px);line-height:1.2}
+.hero .sub{opacity:.9;font-size:14px}
+.bar{height:8px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;margin-top:12px}
+.bar>span{display:block;height:100%;background:#fff;border-radius:99px}
+.barlabel{display:flex;justify-content:space-between;font-size:12px;margin-top:4px;opacity:.9}
+.toggle{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:13px}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:16px 0;box-shadow:var(--shadow)}
+section>h2{margin:0 0 10px;font-size:19px;display:flex;align-items:center;gap:8px}
+.ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:15px}
+.tldr{border-left:5px solid var(--accent)}
+.tldr p{margin:.3em 0}
+ul.obj{margin:.4em 0 0;padding-left:1.2em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.concept{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--card)}
+.concept h3{margin:0 0 6px;font-size:16.5px}
+.concept p{margin:.45em 0}
+.concept.wide{grid-column:1/-1}
+.analogy{background:var(--warn-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+.analogy b{color:var(--warn)}
+.diagram{margin:10px 0;overflow-x:auto}
+.diagram svg{max-width:100%;height:auto;display:block}
+.diagram svg.bars{max-width:620px}
+blockquote{margin:.6em 0;padding:8px 14px;border-left:4px solid var(--line);color:var(--muted);font-style:italic}
+.mermaid-fallback{display:none}
+.no-mermaid .mermaid{display:none}
+.no-mermaid .mermaid-fallback{display:block}
+.tablewrap{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft);color:var(--ink)}
+tr:nth-child(even) td{background:color-mix(in srgb,var(--card) 94%,var(--ink) 6%)}
+.rule{background:var(--ok-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+pre.code{background:var(--code-bg);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;margin:8px 0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:.92em;background:var(--code-bg);padding:1px 5px;border-radius:5px}
+pre code{background:none;padding:0}
+.k{color:var(--kw);font-weight:600}.s{color:var(--str)}.n{color:var(--num)}.c{color:var(--com);font-style:italic}.f{color:var(--fn)}.b{color:var(--bi)}
+.check{list-style:none;padding:0;margin:6px 0}
+.check li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin:6px 0}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--ok);flex:none}
+.check li.done{background:var(--ok-soft);text-decoration:line-through;color:var(--muted)}
+.counter{font-size:13px;color:var(--muted)}
+.callout{border-radius:14px;padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout h2{margin:0 0 6px;font-size:17px}
+.callout.sec{background:var(--sec-soft);border-left:6px solid var(--sec)}
+.callout.sec h2{color:var(--sec)}
+.callout.arch{background:var(--arch-soft);border-left:6px solid var(--arch)}
+.callout.arch h2{color:var(--arch)}
+.callout p{margin:.4em 0}
+.res li{margin:5px 0}
+.quiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{perspective:1000px;cursor:pointer;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit}
+.card .inner{display:grid;transition:transform .5s;transform-style:preserve-3d;min-height:130px}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;padding:14px;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.front{background:var(--accent-soft)}
+.back{background:var(--ok-soft);transform:rotateY(180deg)}
+.face small{color:var(--muted);font-size:12px;margin-top:8px}
+.tomorrow{border-left:5px solid var(--arch)}
+footer{color:var(--muted);font-size:12.5px;text-align:center;padding:10px 0 30px}
+@media (max-width:600px){.wrap{padding:10px}section{padding:14px}header.hero{padding:18px 16px}.toggle{top:10px;right:10px}}
+@media print{.toggle{display:none}.card .inner{transform:none!important}.back{transform:none;margin-top:6px}.face{backface-visibility:visible}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" data-day="19">
+<header class="hero"><button class="toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">☾ Dark</button>
+<div class="meta"><span class="pill">Day 19 / 203</span><span class="pill">Friday 2026-11-06</span><span class="pill">Week 3 / 29</span><span class="pill">⏱ 30 min</span><span class="pill">review</span></div>
+<h1>Recall + security lens: lock in Week 3 and harden the API (ADR-001)</h1>
+<div class="sub">Phase 1: LLM and application foundations · Testing an LLM service (M1)</div>
+<div class="bar" aria-label="Roadmap progress"><span style="width:9.36%"></span></div>
+<div class="barlabel"><span>Roadmap progress 9.4%</span><span>Ends Sun 9 May 2027</span></div></header>
+<section class="tldr"><h2><span class="ico">⚡</span>Today in 30 seconds</h2><p>Friday is a short <strong>recall day</strong> for Week 3. Without notes, explain: testing non-deterministic systems, recorded HTTP fixtures, golden datasets, assertion-based evals, sync vs streaming API design, and logging tokens, latency and cost. Your gaps tell you what to revisit before the <strong>M1 lab</strong> on Saturday and Sunday.</p>
+<p>Then the <strong>security lens</strong>: cap input size, authenticate with API keys that are <strong>hashed at rest</strong>, and write structured audit logs that <strong>never contain secrets or raw transcripts</strong>. Finish by drafting <strong>ADR-001: provider abstraction and structured output strategy</strong>.</p><p><strong>By the end of today you can:</strong></p><ul class="obj"><li>Recall the six Week 3 concepts from memory and log your gaps</li><li>Add input limits, hashed API-key auth and a clean audit log to Bastion&#x27;s plan</li><li>Draft ADR-001 (provider abstraction and structured output strategy)</li></ul></section>
+<section><h2><span class="ico">🧠</span>Concepts</h2><div class="grid"><article class="concept wide"><h3>1. How to do recall (10 minutes)</h3><p>Same method as the last two Fridays. Close your notes. For each concept write two sentences: <strong>what it is</strong> and <strong>where it shows up in Bastion</strong>. Mark each green, amber or red, then check against the table below and the flip cards.</p>
+<ul><li>Ambers and reds go in <code>notes/week-03.md</code> under <em>Gaps</em>.</li><li>Re-read only the matching part of Days 15, 17 and 18.</li></ul>
+<blockquote>Anything still red from Week 2 goes on Saturday&#x27;s TODO too.</blockquote><div class="analogy"><b>Analogy:</b> Recall is a fire drill: find the blocked exit before the real fire, not during it.</div></article><article class="concept wide"><h3>2. Week 3 on one page</h3><p>Use this as the answer key after you&#x27;ve written your own.</p><div class="tablewrap"><table><thead><tr><th>Concept</th><th>One-line meaning</th><th>Where it shows up in Bastion</th></tr></thead><tbody><tr><td>Testing non-deterministic systems</td><td>Assert properties and invariants across samples, not one exact string</td><td>Verdict has a valid category, confidence in 0-1, and the quote really appears in the transcript</td></tr><tr><td>Recorded HTTP fixtures</td><td>Record one real provider response, replay it offline (vcrpy cassettes)</td><td>Unit tests run free and fast; secrets scrubbed from cassettes</td></tr><tr><td>Golden datasets</td><td>Labelled examples with expected outputs, run on every change</td><td>The 100-item set; accuracy and regressions tracked per commit</td></tr><tr><td>Assertion-based evals</td><td>Cheap always-true checks (schema, enums, contains, latency, cost) before any judge model</td><td>CI fails on a broken Verdict before LLM-as-judge is involved</td></tr><tr><td>Sync vs streaming API</td><td>One JSON body vs SSE; streaming improves time-to-first-token, not total time</td><td><code>POST /v1/triage</code> and <code>POST /v1/triage/stream</code> with usage on the last event</td></tr><tr><td>Logging tokens, latency, cost</td><td>One structured line per request with metrics, no secrets</td><td>Audit/metrics log with tokens_in/out, latency_ms, cost_usd</td></tr></tbody></table></div></article><article class="concept"><h3>3. Security lens: three small controls</h3><p>The API takes red-team transcripts, which are sensitive and sometimes hostile. Three cheap controls cover most of the early risk:</p>
+<ul><li><strong>Input limits:</strong> reject oversized bodies (HTTP 413) <em>before</em> any model call. This protects spend and latency, and maps to OWASP LLM10 Unbounded Consumption.</li><li><strong>API-key auth, hashed at rest:</strong> show a key once, store only its SHA-256 hash, compare in constant time. A leaked database then holds no usable keys. (High-entropy random keys are fine with a fast hash; passwords are different and need a slow one.)</li><li><strong>Structured audit logs:</strong> one JSON line per request, built from an <strong>allow-list of fields</strong>, so a careless extra argument can never leak a key or transcript.</li></ul></article><article class="concept wide"><h3>4. What the request path looks like</h3><p>Each gate runs before the next costs anything.</p><div class="diagram"><svg viewBox="0 0 802 238" role="img" aria-label="Cheap checks first; log every outcome without secrets." xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><g style="color:var(--muted)" font-family="system-ui,sans-serif" font-size="13"><rect x="10" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="35.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Authenticate</text><text x="95.0" y="51.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">hash + constant-time</text><text x="95.0" y="67.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">compare</text><line x1="182" y1="47.0" x2="210" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="214" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="299.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Size limit</text><text x="299.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">413 if too big</text><line x1="386" y1="47.0" x2="414" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="418" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="503.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Provider call</text><text x="503.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">timeouts, retries</text><line x1="590" y1="47.0" x2="618" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="622" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="707.0" y="35.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Validate Verdict</text><text x="707.0" y="51.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">strict schema + repair</text><text x="707.0" y="67.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">once</text><path d="M707.0,86 V104 H95.0 V120" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="10" y="124" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="157.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Audit log</text><text x="95.0" y="173.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">allow-listed fields only</text></g></svg><div class="counter">Cheap checks first; log every outcome without secrets.</div></div></article><article class="concept wide"><h3>5. ADR-001: provider abstraction and structured output strategy</h3><p>Use the Day 16 shape: <strong>Title, Status, Context, Decision, Consequences</strong>. A reasonable first draft for Bastion:</p>
+<ul><li><strong>Context:</strong> two providers must be swappable; output must be a typed <code>Verdict</code>; tests must run offline.</li><li><strong>Decision:</strong> a small <code>LLMProvider</code> protocol (one method returning text plus usage); strict JSON schema from the Pydantic model where the provider supports it; validate in our code; one repair attempt, then <code>NeedsReview</code>.</li><li><strong>Consequences:</strong> easy to add a provider and to use FakeProvider in tests; we lose provider-specific features unless the protocol grows; schema features differ between providers, so the contract stays simple.</li></ul>
+<p>Mark it <em>Proposed</em> today and <em>Accepted</em> when M1 ships. Never edit it later: supersede it with a new ADR.</p></article></div></section>
+<section><h2><span class="ico">🐍</span>api_guard.py: hashed key auth, size limit, safe audit log</h2><p>Runs offline on Python 3.12 with only the standard library. The <code>__main__</code> block is the test: bad key gives 401, oversized input gives 413, and the success log line contains neither the key nor the transcript.</p><pre class="code"><code><span class="c"># api_guard.py - Day 19: API-key auth (hashed at rest), input limit, safe audit log (offline)</span>
+<span class="k">import</span> hashlib, hmac, json, secrets, time
+
+MAX_CHARS = <span class="n">20_000</span>   <span class="c"># input limit: reject before spending tokens</span>
+
+<span class="k">def</span> <span class="f">hash_key</span>(key: <span class="b">str</span>) -&gt; <span class="b">str</span>:
+    <span class="k">return</span> hashlib.sha256(key.encode()).hexdigest()
+
+<span class="c"># Store ONLY hashes. A leaked database then holds no usable keys.</span>
+new_key = <span class="s">&quot;bst_&quot;</span> + secrets.token_urlsafe(<span class="n">24</span>)
+KEY_HASHES = {hash_key(new_key): <span class="s">&quot;analyst-1&quot;</span>}
+
+<span class="k">def</span> <span class="f">authenticate</span>(presented: <span class="b">str</span>) -&gt; <span class="b">str</span> | <span class="k">None</span>:
+    h = hash_key(presented)
+    <span class="k">for</span> stored, owner <span class="k">in</span> KEY_HASHES.items():
+        <span class="k">if</span> hmac.compare_digest(stored, h):      <span class="c"># constant-time compare</span>
+            <span class="k">return</span> owner
+    <span class="k">return</span> <span class="k">None</span>
+
+<span class="k">def</span> <span class="f">audit</span>(event: <span class="b">str</span>, owner: <span class="b">str</span> | <span class="k">None</span>, **fields) -&gt; <span class="b">str</span>:
+    <span class="s">&quot;&quot;&quot;One JSON line per request. Allow-list the fields; never log keys or transcripts.&quot;&quot;&quot;</span>
+    allowed = {<span class="s">&quot;status&quot;</span>, <span class="s">&quot;tokens_in&quot;</span>, <span class="s">&quot;tokens_out&quot;</span>, <span class="s">&quot;latency_ms&quot;</span>, <span class="s">&quot;cost_usd&quot;</span>, <span class="s">&quot;transcript_chars&quot;</span>}
+    safe = {k: v <span class="k">for</span> k, v <span class="k">in</span> fields.items() <span class="k">if</span> k <span class="k">in</span> allowed}
+    <span class="k">return</span> json.dumps({<span class="s">&quot;ts&quot;</span>: <span class="b">round</span>(time.time()), <span class="s">&quot;event&quot;</span>: event, <span class="s">&quot;owner&quot;</span>: owner, **safe})
+
+<span class="k">def</span> <span class="f">handle</span>(key: <span class="b">str</span>, transcript: <span class="b">str</span>) -&gt; <span class="b">tuple</span>[<span class="b">int</span>, <span class="b">str</span>]:
+    owner = authenticate(key)
+    <span class="k">if</span> owner <span class="k">is</span> <span class="k">None</span>:
+        <span class="k">return</span> <span class="n">401</span>, audit(<span class="s">&quot;triage&quot;</span>, <span class="k">None</span>, status=<span class="n">401</span>)
+    <span class="k">if</span> <span class="b">len</span>(transcript) &gt; MAX_CHARS:
+        <span class="k">return</span> <span class="n">413</span>, audit(<span class="s">&quot;triage&quot;</span>, owner, status=<span class="n">413</span>, transcript_chars=<span class="b">len</span>(transcript))
+    <span class="k">return</span> <span class="n">200</span>, audit(<span class="s">&quot;triage&quot;</span>, owner, status=<span class="n">200</span>, tokens_in=<span class="n">812</span>, tokens_out=<span class="n">64</span>,
+                      latency_ms=<span class="n">930</span>, cost_usd=<span class="n">0.0021</span>, transcript_chars=<span class="b">len</span>(transcript),
+                      api_key=key, transcript=transcript)   <span class="c"># extras are dropped by the allow-list</span>
+
+<span class="k">if</span> <span class="b">__name__</span> == <span class="s">&quot;__main__&quot;</span>:
+    <span class="k">assert</span> handle(<span class="s">&quot;wrong&quot;</span>, <span class="s">&quot;x&quot;</span>)[<span class="n">0</span>] == <span class="n">401</span>
+    <span class="k">assert</span> handle(new_key, <span class="s">&quot;a&quot;</span> * (MAX_CHARS + <span class="n">1</span>))[<span class="n">0</span>] == <span class="n">413</span>
+    code, line = handle(new_key, <span class="s">&quot;secret transcript text&quot;</span>)
+    <span class="k">assert</span> code == <span class="n">200</span> <span class="k">and</span> new_key <span class="k">not</span> <span class="k">in</span> line <span class="k">and</span> <span class="s">&quot;secret transcript&quot;</span> <span class="k">not</span> <span class="k">in</span> line
+    <span class="b">print</span>(line); <span class="b">print</span>(<span class="s">&quot;ok: auth, size limit and clean audit log&quot;</span>)</code></pre><ul><li>Only <code>hash_key(key)</code> is stored, so a leaked table has no working keys.</li><li><code>hmac.compare_digest</code> avoids timing leaks.</li><li><code>audit()</code> keeps only allow-listed fields; <code>api_key</code> and <code>transcript</code> passed in by mistake are dropped.</li><li>Turn the assertions into pytest tests so CI guards them.</li></ul></section>
+<section><h2><span class="ico">✅</span>Hands-on task</h2><p>30 minutes. Recall without notes (about 10 min). Check and log gaps (about 5 min). Security lens plus ADR-001 draft (about 15 min), or schedule them with a concrete step for the weekend.</p><ul class="check"><li><input type="checkbox" id="t0" aria-label="task 1"><label for="t0">Write two-sentence answers for all six concepts without notes; mark green, amber or red</label></li><li><input type="checkbox" id="t1" aria-label="task 2"><label for="t1">Check against the table and flip cards; log gaps in <code>notes/week-03.md</code></label></li><li><input type="checkbox" id="t2" aria-label="task 3"><label for="t2">Add a max-input-size check and a test that oversized input returns 413 before any provider call</label></li><li><input type="checkbox" id="t3" aria-label="task 4"><label for="t3">Store API keys as hashes only; add a test for the 401 path</label></li><li><input type="checkbox" id="t4" aria-label="task 5"><label for="t4">Make the audit log allow-list based; test that key and transcript never appear</label></li><li><input type="checkbox" id="t5" aria-label="task 6"><label for="t5">Draft <code>docs/adr/0001-provider-abstraction-and-structured-output.md</code> with status Proposed</label></li></ul><div class="counter" id="checkCount"></div></section>
+<div class="callout sec"><h2>🛡 Security lens</h2><p><strong>Logs are a leak path.</strong> Red-team transcripts may contain real attack payloads or sensitive data. Log sizes and hashes, not content, and scrub secrets from recorded fixtures too.</p></div>
+<div class="callout arch"><h2>🏛 Architecture track</h2><p>This week&#x27;s architecture track (Tuesday 2026-11-03): <strong>Documenting decisions: ADRs; first design kata</strong>. Exercise: <strong>Kata #1:</strong> design a distributed rate limiter (requirements, API, data model, failure modes). Use the kata template in Section 8.</p></div>
+<section><h2><span class="ico">📚</span>Resources</h2><ul class="res"><li><a href="https://genai.owasp.org/llmrisk/llm102025-unbounded-consumption/" target="_blank" rel="noopener">OWASP LLM10:2025 Unbounded Consumption</a></li><li><a href="https://adr.github.io/" target="_blank" rel="noopener">ADR examples and templates (adr.github.io)</a></li></ul></section>
+<section><h2><span class="ico">🃏</span>Recall quiz <span class="counter">(tap a card to flip)</span></h2><div class="quiz"><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why can&#x27;t you test an LLM service with exact-match asserts?</div><small>Q1 · tap to reveal</small></div><div class="face back"><div>Outputs vary between runs. Assert properties instead: valid schema, allowed enums, confidence range, quote present in the input.</div><small>A1</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What do recorded HTTP fixtures give you?</div><small>Q2 · tap to reveal</small></div><div class="face back"><div>Offline, fast, free, repeatable tests using one real recorded provider response. Scrub secrets from cassettes.</div><small>A2</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What is a golden dataset for?</div><small>Q3 · tap to reveal</small></div><div class="face back"><div>Labelled examples run on every change to detect accuracy regressions.</div><small>A3</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why run assertion-based evals before an LLM judge?</div><small>Q4 · tap to reveal</small></div><div class="face back"><div>They are cheap, deterministic and catch broken output immediately; judges are slower, costlier and noisier.</div><small>A4</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Does streaming make generation faster?</div><small>Q5 · tap to reveal</small></div><div class="face back"><div>No. It lowers time-to-first-token, which is what users perceive; total time is about the same.</div><small>A5</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What belongs in a per-request log line?</div><small>Q6 · tap to reveal</small></div><div class="face back"><div>Tokens in/out, latency, cost, status, owner and sizes. Never keys, secrets or raw transcripts.</div><small>A6</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>How should API keys be stored?</div><small>Q7 · tap to reveal</small></div><div class="face back"><div>Only as hashes; show the key once at creation; compare in constant time.</div><small>A7</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why check input size before calling the model?</div><small>Q8 · tap to reveal</small></div><div class="face back"><div>It protects spend and latency and is the cheapest defence against unbounded consumption.</div><small>A8</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What are the five ADR sections?</div><small>Q9 · tap to reveal</small></div><div class="face back"><div>Title, Status, Context, Decision, Consequences.</div><small>A9</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>An ADR decision changes. What do you do?</div><small>Q10 · tap to reveal</small></div><div class="face back"><div>Write a new ADR that supersedes the old one; don&#x27;t edit the old one.</div><small>A10</small></div></div></button></div></section>
+<section class="tomorrow"><h2><span class="ico">🔭</span>Tomorrow</h2><p>Saturday: the M1 lab. Build the real providers behind <code>LLMProvider</code>, record fixtures with vcrpy, grow the golden set toward 100 items and finish both endpoints.</p></section>
+<footer>Generated from the AI Engineering Roadmap daily plan · Day 19 of 203 · Times in Asia/Kolkata</footer>
+</div>
+<script>
+(function(){
+  var root=document.documentElement, key='bastion-theme';
+  var saved=localStorage.getItem(key);
+  var dark=saved?saved==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  root.setAttribute('data-theme',dark?'dark':'light');
+  var btn=document.getElementById('themeToggle');
+  function label(){btn.textContent=root.getAttribute('data-theme')==='dark'?'☀ Light':'☾ Dark';}
+  if(btn){label();btn.addEventListener('click',function(){var d=root.getAttribute('data-theme')==='dark'?'light':'dark';root.setAttribute('data-theme',d);localStorage.setItem(key,d);label();rerenderMermaid();});}
+  // checklist persistence
+  var day=document.getElementById('app').dataset.day;
+  var boxes=document.querySelectorAll('.check input[type=checkbox]');
+  function count(){var n=0;boxes.forEach(function(b){if(b.checked)n++;});var c=document.getElementById('checkCount');if(c)c.textContent=n+' / '+boxes.length+' done';}
+  boxes.forEach(function(b,i){var k='bastion-day-'+day+'-task-'+i;b.checked=localStorage.getItem(k)==='1';b.closest('li').classList.toggle('done',b.checked);
+    b.addEventListener('change',function(){localStorage.setItem(k,b.checked?'1':'0');b.closest('li').classList.toggle('done',b.checked);count();});});
+  count();
+  // flip cards
+  document.querySelectorAll('.card').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('flipped');c.setAttribute('aria-pressed',c.classList.contains('flipped'));});});
+  // mermaid (optional, CDN) with graceful fallback
+  var hasMermaid=document.querySelector('.mermaid');
+  window.rerenderMermaid=function(){};
+  if(!hasMermaid)return;
+  var sources=[];document.querySelectorAll('.mermaid').forEach(function(el){sources.push(el.textContent);});
+  function fallback(){document.body.classList.add('no-mermaid');}
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+  s.async=true;
+  var timer=setTimeout(fallback,6000);
+  s.onload=function(){clearTimeout(timer);try{render();}catch(e){fallback();}};
+  s.onerror=function(){clearTimeout(timer);fallback();};
+  function render(){
+    var d=root.getAttribute('data-theme')==='dark';
+    window.mermaid.initialize({startOnLoad:false,theme:d?'dark':'default',securityLevel:'strict',fontFamily:'system-ui, sans-serif'});
+    document.querySelectorAll('.mermaid').forEach(function(el,i){el.removeAttribute('data-processed');el.textContent=sources[i];});
+    window.mermaid.run({querySelector:'.mermaid'}).catch(fallback);
+  }
+  window.rerenderMermaid=function(){if(window.mermaid){try{render();}catch(e){fallback();}}};
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>

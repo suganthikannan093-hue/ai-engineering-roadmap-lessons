@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 4: Lab prep: scaffold the bastion monorepo and budget your context</title>
+<script>(function(){try{var s=localStorage.getItem('bastion-theme');var d=s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();</script>
+<style>
+:root{--bg:#f7f8fb;--card:#ffffff;--ink:#1b2130;--muted:#5d6678;--line:#e3e7ef;--accent:#2f6fec;--accent-soft:#e8f0ff;
+--sec:#c0392b;--sec-soft:#fdecea;--arch:#7a4ce0;--arch-soft:#f1ebff;--ok:#1f9d63;--ok-soft:#e6f6ee;--warn:#b7791f;--warn-soft:#fff6e0;
+--code-bg:#f4f6fa;--kw:#8a2be2;--str:#0b7a3e;--num:#b35900;--com:#7b8494;--fn:#1f5fbf;--bi:#a0306a;--shadow:0 1px 2px rgba(20,30,60,.06),0 4px 14px rgba(20,30,60,.06)}
+[data-theme="dark"]{--bg:#0f131a;--card:#171c26;--ink:#e6e9f0;--muted:#9aa3b5;--line:#2a3140;--accent:#6ea0ff;--accent-soft:#1c2740;
+--sec:#ff7b6b;--sec-soft:#3a1f1d;--arch:#b597ff;--arch-soft:#271f3d;--ok:#4fd39a;--ok-soft:#173027;--warn:#f0c060;--warn-soft:#352b14;
+--code-bg:#11161f;--kw:#c792ea;--str:#a5e075;--num:#f78c6c;--com:#6b7689;--fn:#82aaff;--bi:#ff9cac;--shadow:none}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+header.hero{background:linear-gradient(135deg,var(--accent) 0%,#5b3fd6 100%);color:#fff;border-radius:18px;padding:22px 22px 18px;box-shadow:var(--shadow);position:relative}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;opacity:.95}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.18);white-space:nowrap}
+.hero h1{margin:10px 0 6px;font-size:clamp(22px,4vw,30px);line-height:1.2}
+.hero .sub{opacity:.9;font-size:14px}
+.bar{height:8px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;margin-top:12px}
+.bar>span{display:block;height:100%;background:#fff;border-radius:99px}
+.barlabel{display:flex;justify-content:space-between;font-size:12px;margin-top:4px;opacity:.9}
+.toggle{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:13px}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:16px 0;box-shadow:var(--shadow)}
+section>h2{margin:0 0 10px;font-size:19px;display:flex;align-items:center;gap:8px}
+.ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:15px}
+.tldr{border-left:5px solid var(--accent)}
+.tldr p{margin:.3em 0}
+ul.obj{margin:.4em 0 0;padding-left:1.2em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.concept{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--card)}
+.concept h3{margin:0 0 6px;font-size:16.5px}
+.concept p{margin:.45em 0}
+.concept.wide{grid-column:1/-1}
+.analogy{background:var(--warn-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+.analogy b{color:var(--warn)}
+.diagram{margin:10px 0;overflow-x:auto}
+.diagram svg{max-width:100%;height:auto;display:block}
+.diagram svg.bars{max-width:620px}
+blockquote{margin:.6em 0;padding:8px 14px;border-left:4px solid var(--line);color:var(--muted);font-style:italic}
+.mermaid-fallback{display:none}
+.no-mermaid .mermaid{display:none}
+.no-mermaid .mermaid-fallback{display:block}
+.tablewrap{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft);color:var(--ink)}
+tr:nth-child(even) td{background:color-mix(in srgb,var(--card) 94%,var(--ink) 6%)}
+.rule{background:var(--ok-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+pre.code{background:var(--code-bg);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;margin:8px 0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:.92em;background:var(--code-bg);padding:1px 5px;border-radius:5px}
+pre code{background:none;padding:0}
+.k{color:var(--kw);font-weight:600}.s{color:var(--str)}.n{color:var(--num)}.c{color:var(--com);font-style:italic}.f{color:var(--fn)}.b{color:var(--bi)}
+.check{list-style:none;padding:0;margin:6px 0}
+.check li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin:6px 0}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--ok);flex:none}
+.check li.done{background:var(--ok-soft);text-decoration:line-through;color:var(--muted)}
+.counter{font-size:13px;color:var(--muted)}
+.callout{border-radius:14px;padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout h2{margin:0 0 6px;font-size:17px}
+.callout.sec{background:var(--sec-soft);border-left:6px solid var(--sec)}
+.callout.sec h2{color:var(--sec)}
+.callout.arch{background:var(--arch-soft);border-left:6px solid var(--arch)}
+.callout.arch h2{color:var(--arch)}
+.callout p{margin:.4em 0}
+.res li{margin:5px 0}
+.quiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{perspective:1000px;cursor:pointer;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit}
+.card .inner{display:grid;transition:transform .5s;transform-style:preserve-3d;min-height:130px}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;padding:14px;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.front{background:var(--accent-soft)}
+.back{background:var(--ok-soft);transform:rotateY(180deg)}
+.face small{color:var(--muted);font-size:12px;margin-top:8px}
+.tomorrow{border-left:5px solid var(--arch)}
+footer{color:var(--muted);font-size:12.5px;text-align:center;padding:10px 0 30px}
+@media (max-width:600px){.wrap{padding:10px}section{padding:14px}header.hero{padding:18px 16px}.toggle{top:10px;right:10px}}
+@media print{.toggle{display:none}.card .inner{transform:none!important}.back{transform:none;margin-top:6px}.face{backface-visibility:visible}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" data-day="4">
+<header class="hero"><button class="toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">☾ Dark</button>
+<div class="meta"><span class="pill">Day 4 / 203</span><span class="pill">Thursday 2026-10-22</span><span class="pill">Week 1 / 29</span><span class="pill">⏱ 60 min</span><span class="pill">lab-prep</span></div>
+<h1>Lab prep: scaffold the bastion monorepo and budget your context</h1>
+<div class="sub">Phase 1: LLM and application foundations · Tokens, context and the API surface · Guides G1</div>
+<div class="bar" aria-label="Roadmap progress"><span style="width:1.97%"></span></div>
+<div class="barlabel"><span>Roadmap progress 2.0%</span><span>Ends Sun 9 May 2027</span></div></header>
+<section class="tldr"><h2><span class="ico">⚡</span>Today in 30 seconds</h2><p>Today is set-up day for Saturday&#x27;s lab. You create the <strong><code>bastion</code> monorepo</strong> with a modern Python toolchain: <strong>uv</strong> for Python and dependencies, <strong>ruff</strong> for lint and format, <strong>pytest</strong> for tests, <strong>pre-commit</strong> with <strong>gitleaks</strong> so keys never reach git, and <strong>GitHub Actions</strong> so every push is checked.</p>
+<p>Then you write the lab&#x27;s <strong>done criteria before any code</strong>, and add a small <code>tiktoken</code> script that answers the question every LLM call must answer: <em>does this request fit the context window, with room left for the output?</em></p><p><strong>By the end of today you can:</strong></p><ul class="obj"><li>Scaffold <code>bastion</code> with uv, ruff, pytest, pre-commit (gitleaks) and GitHub Actions, and get CI green</li><li>Explain why tokenisation matters for cost, limits and attacks, and budget a context window</li><li>Write Saturday&#x27;s done criteria and a TODO list before writing client code</li><li>Use guide G1 to pick the first model tier for Bastion triage</li></ul></section>
+<section><h2><span class="ico">🧠</span>Concepts</h2><div class="grid"><article class="concept wide"><h3>1. The toolchain and what each piece buys you</h3><p>A lab repo that is clean from commit one saves you hours later, and it becomes portfolio evidence. Each tool has one job:</p><div class="tablewrap"><table><thead><tr><th>Tool</th><th>Job</th><th>Why this one</th><th>Alternatives (choose when)</th></tr></thead><tbody><tr><td><code>uv</code></td><td>Installs Python 3.12, creates <code>.venv</code>, resolves and <strong>locks</strong> deps (<code>uv.lock</code>)</td><td>One fast Rust binary replaces pyenv + pip + pip-tools + virtualenv; <code>uv sync --locked</code> gives identical envs locally and in CI</td><td>Poetry (existing Poetry shops), pip + pip-tools (minimal tooling), conda/pixi (CUDA and non-Python native deps)</td></tr><tr><td><code>ruff</code></td><td>Lint (<code>ruff check</code>) and format (<code>ruff format</code>)</td><td>Replaces flake8, isort, pyupgrade and black; the <code>S</code> rules (bandit) catch things like <code>eval</code> and hard-coded passwords</td><td>black + flake8 (legacy config), pylint (deeper but slower checks)</td></tr><tr><td><code>pytest</code></td><td>Tests and, later, eval fixtures</td><td>Fixtures and parametrisation suit prompt and eval test cases</td><td>unittest (stdlib only)</td></tr><tr><td><code>pre-commit</code></td><td>Runs ruff and gitleaks before each commit</td><td>Stops bad code and <strong>secrets</strong> before they enter history, which is far cheaper than rotating a leaked key</td><td>lefthook / husky (polyglot repos)</td></tr><tr><td>GitHub Actions</td><td>Re-runs lint and tests on every push and PR</td><td>Hooks can be skipped with <code>--no-verify</code>; CI cannot. Least-privilege <code>permissions: contents: read</code></td><td>GitLab CI, Buildkite (match your org)</td></tr></tbody></table></div><div class="analogy"><b>Analogy:</b> Pre-commit is the seat-belt chime in your car; CI is the roadside check you can&#x27;t talk your way out of.</div></article><article class="concept wide"><h3>2. Monorepo layout for Bastion</h3><p>Bastion grows into several components (triage service, gateway, evals, harness, agent). Starting as <strong>one repo with one package</strong> keeps refactoring cheap. You split packages (uv <strong>workspaces</strong>) only when module boundaries are proven, which is Week 9&#x27;s modular-monolith lesson.</p>
+<ul><li><code>src/bastion/</code> holds the importable package. The <em>src layout</em> stops tests from accidentally importing uninstalled code.</li><li><code>tests/</code>, <code>notes/</code> (weekly notes), <code>docs/</code> (ADRs and measurements from Week 3) and <code>.github/workflows/</code>.</li><li><code>.env.example</code> is committed; <code>.env</code> is git-ignored.</li></ul><div class="diagram"><pre class="mermaid">flowchart LR
+  A[edit code] --&gt; B[git commit]
+  B --&gt; C{pre-commit}
+  C -- ruff / gitleaks fail --&gt; A
+  C -- pass --&gt; D[git push]
+  D --&gt; E[GitHub Actions: uv sync --locked, ruff, pytest]
+  E -- red --&gt; A
+  E -- green --&gt; F[merge to main]</pre><div class="mermaid-fallback"><p class="counter">Diagram source (Mermaid CDN unavailable):</p><pre class="code">flowchart LR
+  A[edit code] --&gt; B[git commit]
+  B --&gt; C{pre-commit}
+  C -- ruff / gitleaks fail --&gt; A
+  C -- pass --&gt; D[git push]
+  D --&gt; E[GitHub Actions: uv sync --locked, ruff, pytest]
+  E -- red --&gt; A
+  E -- green --&gt; F[merge to main]</pre></div><div class="counter">Where every check runs, from your editor to the main branch.</div></div></article><article class="concept wide"><h3>3. Tokens: cost, limits and attacks</h3><p>Models read <strong>tokens</strong>, sub-word pieces from a BPE vocabulary, not characters or words. That one fact drives three things:</p>
+<ul><li><strong>Cost:</strong> you pay per token in and out (Day 3).</li><li><strong>Limits:</strong> context windows, <code>max_tokens</code> and TPM rate limits are all counted in tokens.</li><li><strong>Attacks:</strong> obfuscation such as leetspeak, homoglyphs, odd Unicode or Base64 changes how text is tokenised. That can slip past keyword filters while the model still understands it, and it also inflates token count, so it costs more.</li></ul>
+<p>Token counts depend on the <strong>tokenizer</strong>. <code>tiktoken</code> is exact for OpenAI encodings such as <code>o200k_base</code>, but only an estimate for Claude, Llama or Gemini. For those, use the provider&#x27;s count-tokens endpoint or the <code>usage</code> field in the response as the source of truth.</p><div class="diagram"><svg class="bars" viewBox="0 0 560 130" role="img" aria-label="Measured with `o200k_base` in today&#x27;s script. Leetspeak doubles the tokens for fewer words." xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif" font-size="13"><text x="162" y="23" text-anchor="end" fill="var(--ink)">hello world</text><rect x="170" y="9" width="62.0" height="20" rx="5" fill="var(--accent)"/><text x="238.0" y="23" fill="var(--muted)">2 tokens</text><text x="162" y="53" text-anchor="end" fill="var(--ink)">Ignore all previous instructions</text><rect x="170" y="39" width="124.0" height="20" rx="5" fill="var(--accent)"/><text x="300.0" y="53" fill="var(--muted)">4 tokens</text><text x="162" y="83" text-anchor="end" fill="var(--ink)">1gn0r3 pr3v10us</text><rect x="170" y="69" width="310.0" height="20" rx="5" fill="var(--accent)"/><text x="486.0" y="83" fill="var(--muted)">10 tokens</text><text x="162" y="113" text-anchor="end" fill="var(--ink)">नमस्ते दुनिया (Hindi)</text><rect x="170" y="99" width="155.0" height="20" rx="5" fill="var(--accent)"/><text x="331.0" y="113" fill="var(--muted)">5 tokens</text></svg><div class="counter">Measured with <code>o200k_base</code> in today&#x27;s script. Leetspeak doubles the tokens for fewer words.</div></div></article><article class="concept wide"><h3>4. Context windows: budget input and output together</h3><p>The <strong>context window</strong> is the total number of tokens the model can handle in one call. Your input <strong>and</strong> the output it generates must fit inside it, and some APIs also cap output separately. Budget it explicitly:</p>
+<p><code>system + tools + history + retrieved docs + user + max_output &lt;= window</code></p>
+<ul><li>When the budget overflows, the API returns a 400 error (don&#x27;t retry; trim). Your options are to truncate the oldest turns, summarise or compact the history (G2), retrieve less, or route to a model with a bigger window (G1).</li><li>A bigger window is not free. You pay for every token on every call, latency grows with prompt length, and models use information in the middle of a long context less reliably than at the start or end (&quot;lost in the middle&quot;).</li></ul><div class="diagram"><svg viewBox="0 0 802 238" role="img" aria-label="The order you fill a context window, with stable content first so it caches (G12)." xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><g style="color:var(--muted)" font-family="system-ui,sans-serif" font-size="13"><rect x="10" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">System + tools</text><text x="95.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">stable prefix, cached</text><line x1="182" y1="47.0" x2="210" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="214" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="299.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Retrieved docs</text><text x="299.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">only what is needed</text><line x1="386" y1="47.0" x2="414" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="418" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="503.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">History</text><text x="503.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">trim or summarise</text><line x1="590" y1="47.0" x2="618" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="622" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="707.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">User turn</text><text x="707.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">untrusted input</text><path d="M707.0,86 V104 H95.0 V120" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="10" y="124" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="157.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Output reserve</text><text x="95.0" y="173.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">max_tokens</text></g></svg><div class="counter">The order you fill a context window, with stable content first so it caches (G12).</div></div></article><article class="concept wide"><h3>5. Write &#x27;done&#x27; before you code</h3><p>Saturday&#x27;s lab has a lot in it: a streaming client, token counting, cost, retries, and a temperature experiment. Writing <strong>done criteria</strong> first keeps scope fixed and turns the lab into evidence you can check off.</p>
+<p>Good done criteria are <strong>observable</strong> (&quot;<code>pytest</code> shows the 429 path retries 3× then raises&quot;), not vague (&quot;retries work&quot;). Put them in <code>notes/TODO-saturday.md</code>; the script below creates a starter version. Also name the <strong>biggest risk</strong> to finishing (for most people it is time or an API-key or billing hiccup) and its mitigation: Ollama locally as a free fallback provider, plus a spend cap.</p></article></div></section>
+<section><h2><span class="ico">⚖</span>When to choose which</h2><h3>G1. Model choice</h3><p>For the Week 1 lab: one frontier API to set the quality ceiling, plus a small open-weight model on Ollama as the free fallback. Record the choice in <code>notes/week-01.md</code>.</p><div class="tablewrap"><table><thead><tr><th>Option</th><th>Pros</th><th>Cons</th><th>Choose when</th></tr></thead><tbody><tr><td>Frontier proprietary API</td><td>Best quality and tool use; no ops; fast to start</td><td>Per-token cost; data leaves your boundary; vendor changes and deprecations; rate limits</td><td>Quality matters most, traffic is spiky or small, or you are prototyping</td></tr><tr><td>Open-weight model, hosted by a provider</td><td>Cheaper than frontier; can switch providers; same weights self-hostable later</td><td>Quality gap on hard tasks; provider variance in quantisation and limits</td><td>Good-enough quality at lower cost; you want an exit path to self-hosting</td></tr><tr><td>Open-weight model, self-hosted</td><td>Data stays inside; fine-tunable; predictable cost at high utilisation; can run attacker models providers refuse</td><td>GPU ops burden; idle GPUs burn money; you own safety and updates</td><td>Steady high volume, data residency, custom fine-tunes, red-team attacker/judge models</td></tr><tr><td>Small or specialised model</td><td>Very low latency and cost; runs on CPU/edge or one small GPU</td><td>Narrow; brittle outside its task</td><td>High-volume narrow tasks: classification, extraction, routing, guard models, judges</td></tr><tr><td>Reasoning models</td><td>Much better at multi-step maths, code, planning, hard analysis</td><td>Slower, more expensive, sometimes over-think simple tasks</td><td>Hard reasoning, complex agents&#x27; planning steps, offline analysis; not for simple extraction or chat</td></tr><tr><td>Non-reasoning (standard) models</td><td>Fast, cheap, predictable latency</td><td>Weaker on multi-step problems</td><td>Most production calls: extraction, classification, summarisation, RAG answers</td></tr><tr><td>Routing / cascades</td><td>Large cost savings at similar quality</td><td>Router errors; more moving parts and evals</td><td>High volume with mixed difficulty; once you have evals to measure quality per route</td></tr></tbody></table></div><div class="rule"><strong>Default:</strong> start with a frontier model to set the quality ceiling, build evals, then move each step to the cheapest model that passes. Keep a provider abstraction (gateway) so swapping is a config change.</div><p class="counter">Full guide: roadmap Section 9, <a href="../roadmap.html#g1-model-choice">G1 Model choice</a>.</p></section>
+<section><h2><span class="ico">🐍</span>bootstrap_bastion.sh: scaffold the repo in one go</h2><p>Tested on uv 0.13 with Python 3.12: it runs ruff, pytest and <code>pre-commit run --all-files</code> green. Run it in the folder where you keep projects, then push to a new <strong>private</strong> GitHub repo. Pinned hook versions were current when tested; <code>uv run pre-commit autoupdate</code> bumps them.</p><pre class="code"><code><span class="c">#!/usr/bin/env bash</span>
+<span class="c"># bootstrap_bastion.sh  -  Day 4 lab prep: scaffold the bastion monorepo</span>
+<span class="b">set</span> -euo pipefail
+mkdir bastion &amp;&amp; cd bastion
+git init -q -b main
+uv init --python <span class="n">3.12</span> --name bastion --lib --vcs none .   <span class="c"># creates pyproject.toml + src/bastion/</span>
+uv add tiktoken httpx                                      <span class="c"># runtime deps for Saturday&#x27;s client</span>
+uv add --dev ruff pytest pre-commit                        <span class="c"># dev tools, locked in uv.lock</span>
+
+mkdir -p tests notes docs .github/workflows
+cat &gt;&gt; pyproject.toml &lt;&lt;<span class="s">&#x27;TOML&#x27;</span>
+
+[tool.ruff]
+line-length = <span class="n">100</span>
+target-version = <span class="s">&quot;py312&quot;</span>
+
+[tool.ruff.lint]
+select = [<span class="s">&quot;E&quot;</span>, <span class="s">&quot;F&quot;</span>, <span class="s">&quot;I&quot;</span>, <span class="s">&quot;B&quot;</span>, <span class="s">&quot;UP&quot;</span>, <span class="s">&quot;S&quot;</span>]   <span class="c"># S = flake8-bandit security rules</span>
+
+[tool.ruff.lint.per-file-ignores]
+<span class="s">&quot;tests/*&quot;</span> = [<span class="s">&quot;S101&quot;</span>]                        <span class="c"># allow assert in tests</span>
+
+[tool.pytest.ini_options]
+testpaths = [<span class="s">&quot;tests&quot;</span>]
+TOML
+
+cat &gt; src/bastion/__init__.py &lt;&lt;<span class="s">&#x27;PY&#x27;</span>
+<span class="s">&quot;&quot;&quot;Bastion: threat-modelled AI agent platform (learning project).&quot;&quot;&quot;</span>
+
+__version__ = <span class="s">&quot;0.1.0&quot;</span>
+PY
+
+cat &gt; tests/test_smoke.py &lt;&lt;<span class="s">&#x27;PY&#x27;</span>
+<span class="k">import</span> bastion
+
+
+<span class="k">def</span> <span class="f">test_version</span>() -&gt; <span class="k">None</span>:
+    <span class="k">assert</span> bastion.__version__ == <span class="s">&quot;0.1.0&quot;</span>
+PY
+
+cat &gt; .pre-commit-config.yaml &lt;&lt;<span class="s">&#x27;YAML&#x27;</span>
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0<span class="n">.14</span><span class="n">.0</span>
+    hooks:
+      - <span class="b">id</span>: ruff-check
+        args: [--fix]
+      - <span class="b">id</span>: ruff-<span class="b">format</span>
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8<span class="n">.28</span><span class="n">.0</span>
+    hooks:
+      - <span class="b">id</span>: gitleaks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6<span class="n">.0</span><span class="n">.0</span>
+    hooks:
+      - <span class="b">id</span>: check-yaml
+      - <span class="b">id</span>: end-of-file-fixer
+      - <span class="b">id</span>: trailing-whitespace
+YAML
+
+cat &gt; .github/workflows/ci.yml &lt;&lt;<span class="s">&#x27;YAML&#x27;</span>
+name: ci
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        <span class="k">with</span>:
+          python-version: <span class="s">&quot;3.12&quot;</span>
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff <span class="b">format</span> --check .
+      - run: uv run pytest -q
+YAML
+
+cat &gt; .env.example &lt;&lt;<span class="s">&#x27;ENV&#x27;</span>
+<span class="c"># Copy to .env (never commit .env). Real keys live in your shell or a secret manager.</span>
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+BASTION_DAILY_BUDGET_USD=<span class="n">2.00</span>
+ENV
+printf <span class="s">&#x27;.env\n.venv/\n__pycache__/\n.pytest_cache/\n.ruff_cache/\n&#x27;</span> &gt;&gt; .gitignore
+
+cat &gt; notes/TODO-saturday.md &lt;&lt;<span class="s">&#x27;MD&#x27;</span>
+<span class="c"># Week 1 lab: done when</span>
+- [ ] `bastion.llm.client` streams <span class="k">from</span> one hosted provider <span class="k">and</span> Ollama behind one interface
+- [ ] tokens counted <span class="k">with</span> tiktoken; cost per call logged
+- [ ] retries only on <span class="n">408</span>/<span class="n">429</span>/<span class="n">5</span>xx, full jitter, total timeout <span class="n">60</span> s
+- [ ] temperature <span class="n">0</span> / <span class="n">0.7</span> / <span class="n">1.2</span> x <span class="n">10</span> runs, variance recorded <span class="k">in</span> docs/
+- [ ] CI green; no secrets <span class="k">in</span> git
+MD
+
+uv run ruff check . &amp;&amp; uv run ruff <span class="b">format</span> --check . &amp;&amp; uv run pytest -q
+uv run pre-commit install</code></pre><p>Expected end of output: <code>All checks passed!</code>, <code>1 passed</code> and <code>pre-commit installed at .git/hooks/pre-commit</code>. <code>uv init --lib</code> gives you the src layout. <code>uv add --dev</code> keeps ruff, pytest and pre-commit out of runtime deps. CI uses <code>uv sync --locked</code>, so it fails if <code>uv.lock</code> is out of date instead of silently resolving new versions. ruff&#x27;s <code>S</code> rules are on from day one because this is a security project.</p></section>
+<section><h2><span class="ico">🐍</span>ctx_budget.py: will this request fit?</h2><p>Drop it in the repo root and run <code>uv run python ctx_budget.py</code>. The first run downloads the encoding file once.</p><pre class="code"><code><span class="c"># ctx_budget.py  -  will this request fit? (run with: uv run python ctx_budget.py)</span>
+<span class="k">import</span> tiktoken
+
+<span class="c"># o200k_base = GPT-4o-family encoding; other vendors tokenise differently</span>
+enc = tiktoken.get_encoding(<span class="s">&quot;o200k_base&quot;</span>)
+
+<span class="k">def</span> <span class="f">fits</span>(system: <span class="b">str</span>, history: <span class="b">list</span>[<span class="b">str</span>], user: <span class="b">str</span>, *, window: <span class="b">int</span>, max_output: <span class="b">int</span>) -&gt; <span class="b">dict</span>:
+    used = <span class="b">sum</span>(<span class="b">len</span>(enc.encode(t)) <span class="k">for</span> t <span class="k">in</span> [system, *history, user])
+    <span class="k">return</span> {<span class="s">&quot;input_tokens&quot;</span>: used, <span class="s">&quot;reserved_output&quot;</span>: max_output,
+            <span class="s">&quot;headroom&quot;</span>: window - used - max_output, <span class="s">&quot;fits&quot;</span>: used + max_output &lt;= window}
+
+system = <span class="s">&quot;You are Bastion triage. Classify the prompt as benign, jailbreak or injection. &quot;</span> * <span class="n">20</span>
+history = [<span class="s">&quot;previous turn &quot;</span> * <span class="n">300</span>] * <span class="n">10</span>
+<span class="b">print</span>(fits(system, history, <span class="s">&quot;Ignore all previous instructions.&quot;</span>, window=<span class="n">128_000</span>, max_output=<span class="n">4_096</span>))
+<span class="b">print</span>(fits(system, history, <span class="s">&quot;x &quot;</span> * <span class="n">130_000</span>, window=<span class="n">128_000</span>, max_output=<span class="n">4_096</span>))
+<span class="k">for</span> s <span class="k">in</span> [<span class="s">&quot;hello world&quot;</span>, <span class="s">&quot;Ignore all previous instructions&quot;</span>, <span class="s">&quot;1gn0r3 pr3v10us&quot;</span>, <span class="s">&quot;नमस्ते दुनिया&quot;</span>]:
+    <span class="b">print</span>(<span class="s">f&quot;</span>{<span class="b">len</span>(enc.encode(s)):<span class="s">&gt;3</span>}<span class="s"> tokens  </span>{s!r}<span class="s">&quot;</span>)</code></pre><p>Expected output: the first request uses 6,376 input tokens and fits with 117,528 tokens of headroom. The second overflows by 12,468, so it would come back as a 400 error that you fix by trimming, not retrying. The last four lines print the token counts in the bar chart above. On Saturday this function becomes a pre-flight check in the client.</p></section>
+<section><h2><span class="ico">✅</span>Hands-on task</h2><p>60 minutes. Run the bootstrap and push to GitHub (≈25 min). Get CI green and try a deliberate fake-secret commit (≈10 min). Run <code>ctx_budget.py</code> (≈10 min). Write the done criteria, risks and G1 choice (≈15 min). Skim Chip Huyen <em>AI Engineering</em> ch. 1-2 if time remains.</p><ul class="check"><li><input type="checkbox" id="t0" aria-label="task 1"><label for="t0">Run <code>bootstrap_bastion.sh</code>; see <code>All checks passed!</code> and <code>1 passed</code></label></li><li><input type="checkbox" id="t1" aria-label="task 2"><label for="t1">Create a private GitHub repo, push <code>main</code>, and see the <code>ci</code> workflow go green</label></li><li><input type="checkbox" id="t2" aria-label="task 3"><label for="t2">In a throwaway file, commit a fake AWS-style key ID (<code>AKIA</code> plus 16 random uppercase letters and digits 2-7) and check that gitleaks blocks the commit; then delete the file</label></li><li><input type="checkbox" id="t3" aria-label="task 4"><label for="t3">Put your API key in your shell or a secret manager (not <code>.env</code> in git); set a spend cap on the provider console</label></li><li><input type="checkbox" id="t4" aria-label="task 5"><label for="t4">Install Ollama and pull one small model as the free fallback (optional but recommended)</label></li><li><input type="checkbox" id="t5" aria-label="task 6"><label for="t5">Run <code>ctx_budget.py</code> and note where your triage prompt would hit the window</label></li><li><input type="checkbox" id="t6" aria-label="task 7"><label for="t6">Edit <code>notes/TODO-saturday.md</code>: done criteria, the biggest risk and its mitigation</label></li><li><input type="checkbox" id="t7" aria-label="task 8"><label for="t7">In <code>notes/week-01.md</code>: one line on your G1 choice (model tier) for Bastion triage</label></li><li><input type="checkbox" id="t8" aria-label="task 9"><label for="t8">Flip the recall cards</label></li></ul><div class="counter" id="checkCount"></div></section>
+<div class="callout sec"><h2>🛡 Security lens</h2><p><strong>Supply chain and secrets from commit one.</strong></p>
+<ul><li><strong>gitleaks</strong> in pre-commit stops keys before they enter git history. Once a key is pushed, rotate it; rewriting history is not enough.</li><li><strong><code>uv.lock</code> + <code>uv sync --locked</code></strong> pins exact versions with hashes, which blocks silent dependency drift (OWASP LLM03:2025 Supply Chain).</li><li><strong>CI least privilege:</strong> <code>permissions: contents: read</code>, no secrets in PR workflows from forks, and pin actions to a major version (or to a commit SHA for stricter repos).</li><li><strong>Token-level evasion:</strong> remember the leetspeak bar. Keyword filters on raw text are weak; Bastion&#x27;s later guardrails must normalise text and use model-based classifiers.</li></ul></div>
+<div class="callout arch"><h2>🏛 Architecture track</h2><p>The repo layout is your first architecture decision. A single package now, with uv workspaces later, is the <em>monolith first</em> principle you meet in Week 9. CI is your first <strong>fitness function</strong>: an automated check that protects a quality attribute (here, maintainability and security). Week 2 adds more of them, and Week 3 records this choice as an ADR.</p></div>
+<section><h2><span class="ico">📚</span>Resources</h2><ul class="res"><li><a href="https://www.oreilly.com/library/view/ai-engineering/9781098166298/" target="_blank" rel="noopener">Chip Huyen, AI Engineering (O&#x27;Reilly, 2025), chapters 1-2</a></li><li><a href="https://docs.astral.sh/uv/concepts/projects/init/" target="_blank" rel="noopener">uv: creating projects (uv init)</a></li><li><a href="https://docs.astral.sh/uv/guides/integration/github/" target="_blank" rel="noopener">uv: using uv in GitHub Actions</a></li><li><a href="https://docs.astral.sh/ruff/" target="_blank" rel="noopener">Ruff documentation</a></li><li><a href="https://docs.pytest.org/en/stable/getting-started.html" target="_blank" rel="noopener">pytest: getting started</a></li><li><a href="https://pre-commit.com/" target="_blank" rel="noopener">pre-commit</a></li><li><a href="https://github.com/gitleaks/gitleaks" target="_blank" rel="noopener">gitleaks</a></li><li><a href="https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions" target="_blank" rel="noopener">GitHub Actions workflow syntax</a></li><li><a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener">tiktoken</a></li></ul></section>
+<section><h2><span class="ico">🃏</span>Recall quiz <span class="counter">(tap a card to flip)</span></h2><div class="quiz"><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What does <code>uv sync --locked</code> do in CI, and why use it?</div><small>Q1 · tap to reveal</small></div><div class="face back"><div>It installs exactly what <code>uv.lock</code> specifies and fails if the lock file is out of date. You get reproducible builds and no silent dependency drift.</div><small>A1</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why have both pre-commit hooks and CI?</div><small>Q2 · tap to reveal</small></div><div class="face back"><div>Hooks give fast local feedback but can be skipped with <code>--no-verify</code> or not installed at all. CI is the enforced gate on every push and PR.</div><small>A2</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>A key was pushed to GitHub and you deleted it in the next commit. Are you safe?</div><small>Q3 · tap to reveal</small></div><div class="face back"><div>No. It is still in history and may already have been scraped. Rotate the key immediately, then clean the history if you need to.</div><small>A3</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why is a <code>tiktoken</code> count only an estimate for Claude or Llama?</div><small>Q4 · tap to reveal</small></div><div class="face back"><div>Each model family has its own tokenizer. Use the provider&#x27;s count-tokens API or the response <code>usage</code> field as the source of truth.</div><small>A4</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What must fit inside the context window?</div><small>Q5 · tap to reveal</small></div><div class="face back"><div>All the input (system, tools, history, docs, user) plus the output reserve (<code>max_tokens</code>).</div><small>A5</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>The request overflows the window and you get a 400. Retry?</div><small>Q6 · tap to reveal</small></div><div class="face back"><div>No. Trim, summarise, retrieve less, or route to a larger-window model.</div><small>A6</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why does leetspeak matter to a red teamer?</div><small>Q7 · tap to reveal</small></div><div class="face back"><div>It changes tokenisation, so naive keyword filters miss it while the model still understands it. It also inflates token count and cost.</div><small>A7</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What will &#x27;done&#x27; look like for this week&#x27;s lab?</div><small>Q8 · tap to reveal</small></div><div class="face back"><div>Observable checks: the client streams from a provider and Ollama, logs tokens and cost, retries only retryable errors with jitter and a total timeout, the temperature runs are recorded in <code>docs/</code>, and CI is green.</div><small>A8</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Which risk is most likely to derail the lab, and the mitigation?</div><small>Q9 · tap to reveal</small></div><div class="face back"><div>Usually time or an API-key or billing problem. Mitigate with a fixed TODO list, a spend cap, and Ollama as a free local fallback.</div><small>A9</small></div></div></button></div></section>
+<section class="tomorrow"><h2><span class="ico">🔭</span>Tomorrow</h2><p>Recall and security lens for Week 1: answer the week&#x27;s prompts without notes.</p></section>
+<footer>Generated from the AI Engineering Roadmap daily plan · Day 4 of 203 · Times in Asia/Kolkata</footer>
+</div>
+<script>
+(function(){
+  var root=document.documentElement, key='bastion-theme';
+  var saved=localStorage.getItem(key);
+  var dark=saved?saved==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  root.setAttribute('data-theme',dark?'dark':'light');
+  var btn=document.getElementById('themeToggle');
+  function label(){btn.textContent=root.getAttribute('data-theme')==='dark'?'☀ Light':'☾ Dark';}
+  if(btn){label();btn.addEventListener('click',function(){var d=root.getAttribute('data-theme')==='dark'?'light':'dark';root.setAttribute('data-theme',d);localStorage.setItem(key,d);label();rerenderMermaid();});}
+  // checklist persistence
+  var day=document.getElementById('app').dataset.day;
+  var boxes=document.querySelectorAll('.check input[type=checkbox]');
+  function count(){var n=0;boxes.forEach(function(b){if(b.checked)n++;});var c=document.getElementById('checkCount');if(c)c.textContent=n+' / '+boxes.length+' done';}
+  boxes.forEach(function(b,i){var k='bastion-day-'+day+'-task-'+i;b.checked=localStorage.getItem(k)==='1';b.closest('li').classList.toggle('done',b.checked);
+    b.addEventListener('change',function(){localStorage.setItem(k,b.checked?'1':'0');b.closest('li').classList.toggle('done',b.checked);count();});});
+  count();
+  // flip cards
+  document.querySelectorAll('.card').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('flipped');c.setAttribute('aria-pressed',c.classList.contains('flipped'));});});
+  // mermaid (optional, CDN) with graceful fallback
+  var hasMermaid=document.querySelector('.mermaid');
+  window.rerenderMermaid=function(){};
+  if(!hasMermaid)return;
+  var sources=[];document.querySelectorAll('.mermaid').forEach(function(el){sources.push(el.textContent);});
+  function fallback(){document.body.classList.add('no-mermaid');}
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+  s.async=true;
+  var timer=setTimeout(fallback,6000);
+  s.onload=function(){clearTimeout(timer);try{render();}catch(e){fallback();}};
+  s.onerror=function(){clearTimeout(timer);fallback();};
+  function render(){
+    var d=root.getAttribute('data-theme')==='dark';
+    window.mermaid.initialize({startOnLoad:false,theme:d?'dark':'default',securityLevel:'strict',fontFamily:'system-ui, sans-serif'});
+    document.querySelectorAll('.mermaid').forEach(function(el,i){el.removeAttribute('data-processed');el.textContent=sources[i];});
+    window.mermaid.run({querySelector:'.mermaid'}).catch(fallback);
+  }
+  window.rerenderMermaid=function(){if(window.mermaid){try{render();}catch(e){fallback();}}};
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>
