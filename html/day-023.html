@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 23: Architecture track: Data-intensive systems: reliability, scalability, maintainability</title>
+<script>(function(){try{var s=localStorage.getItem('bastion-theme');var d=s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();</script>
+<style>
+:root{--bg:#f7f8fb;--card:#ffffff;--ink:#1b2130;--muted:#5d6678;--line:#e3e7ef;--accent:#2f6fec;--accent-soft:#e8f0ff;
+--sec:#c0392b;--sec-soft:#fdecea;--arch:#7a4ce0;--arch-soft:#f1ebff;--ok:#1f9d63;--ok-soft:#e6f6ee;--warn:#b7791f;--warn-soft:#fff6e0;
+--code-bg:#f4f6fa;--kw:#8a2be2;--str:#0b7a3e;--num:#b35900;--com:#7b8494;--fn:#1f5fbf;--bi:#a0306a;--shadow:0 1px 2px rgba(20,30,60,.06),0 4px 14px rgba(20,30,60,.06)}
+[data-theme="dark"]{--bg:#0f131a;--card:#171c26;--ink:#e6e9f0;--muted:#9aa3b5;--line:#2a3140;--accent:#6ea0ff;--accent-soft:#1c2740;
+--sec:#ff7b6b;--sec-soft:#3a1f1d;--arch:#b597ff;--arch-soft:#271f3d;--ok:#4fd39a;--ok-soft:#173027;--warn:#f0c060;--warn-soft:#352b14;
+--code-bg:#11161f;--kw:#c792ea;--str:#a5e075;--num:#f78c6c;--com:#6b7689;--fn:#82aaff;--bi:#ff9cac;--shadow:none}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+header.hero{background:linear-gradient(135deg,var(--accent) 0%,#5b3fd6 100%);color:#fff;border-radius:18px;padding:22px 22px 18px;box-shadow:var(--shadow);position:relative}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;opacity:.95}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.18);white-space:nowrap}
+.hero h1{margin:10px 0 6px;font-size:clamp(22px,4vw,30px);line-height:1.2}
+.hero .sub{opacity:.9;font-size:14px}
+.bar{height:8px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;margin-top:12px}
+.bar>span{display:block;height:100%;background:#fff;border-radius:99px}
+.barlabel{display:flex;justify-content:space-between;font-size:12px;margin-top:4px;opacity:.9}
+.toggle{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:13px}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:16px 0;box-shadow:var(--shadow)}
+section>h2{margin:0 0 10px;font-size:19px;display:flex;align-items:center;gap:8px}
+.ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:15px}
+.tldr{border-left:5px solid var(--accent)}
+.tldr p{margin:.3em 0}
+ul.obj{margin:.4em 0 0;padding-left:1.2em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.concept{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--card)}
+.concept h3{margin:0 0 6px;font-size:16.5px}
+.concept p{margin:.45em 0}
+.concept.wide{grid-column:1/-1}
+.analogy{background:var(--warn-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+.analogy b{color:var(--warn)}
+.diagram{margin:10px 0;overflow-x:auto}
+.diagram svg{max-width:100%;height:auto;display:block}
+.diagram svg.bars{max-width:620px}
+blockquote{margin:.6em 0;padding:8px 14px;border-left:4px solid var(--line);color:var(--muted);font-style:italic}
+.mermaid-fallback{display:none}
+.no-mermaid .mermaid{display:none}
+.no-mermaid .mermaid-fallback{display:block}
+.tablewrap{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft);color:var(--ink)}
+tr:nth-child(even) td{background:color-mix(in srgb,var(--card) 94%,var(--ink) 6%)}
+.rule{background:var(--ok-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+pre.code{background:var(--code-bg);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;margin:8px 0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:.92em;background:var(--code-bg);padding:1px 5px;border-radius:5px}
+pre code{background:none;padding:0}
+.k{color:var(--kw);font-weight:600}.s{color:var(--str)}.n{color:var(--num)}.c{color:var(--com);font-style:italic}.f{color:var(--fn)}.b{color:var(--bi)}
+.check{list-style:none;padding:0;margin:6px 0}
+.check li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin:6px 0}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--ok);flex:none}
+.check li.done{background:var(--ok-soft);text-decoration:line-through;color:var(--muted)}
+.counter{font-size:13px;color:var(--muted)}
+.callout{border-radius:14px;padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout h2{margin:0 0 6px;font-size:17px}
+.callout.sec{background:var(--sec-soft);border-left:6px solid var(--sec)}
+.callout.sec h2{color:var(--sec)}
+.callout.arch{background:var(--arch-soft);border-left:6px solid var(--arch)}
+.callout.arch h2{color:var(--arch)}
+.callout p{margin:.4em 0}
+.res li{margin:5px 0}
+.quiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{perspective:1000px;cursor:pointer;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit}
+.card .inner{display:grid;transition:transform .5s;transform-style:preserve-3d;min-height:130px}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;padding:14px;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.front{background:var(--accent-soft)}
+.back{background:var(--ok-soft);transform:rotateY(180deg)}
+.face small{color:var(--muted);font-size:12px;margin-top:8px}
+.tomorrow{border-left:5px solid var(--arch)}
+footer{color:var(--muted);font-size:12.5px;text-align:center;padding:10px 0 30px}
+@media (max-width:600px){.wrap{padding:10px}section{padding:14px}header.hero{padding:18px 16px}.toggle{top:10px;right:10px}}
+@media print{.toggle{display:none}.card .inner{transform:none!important}.back{transform:none;margin-top:6px}.face{backface-visibility:visible}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" data-day="23">
+<header class="hero"><button class="toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">☾ Dark</button>
+<div class="meta"><span class="pill">Day 23 / 203</span><span class="pill">Tuesday 2026-11-10</span><span class="pill">Week 4 / 29</span><span class="pill">⏱ 120 min</span><span class="pill">arch</span></div>
+<h1>Architecture track: Data-intensive systems: reliability, scalability, maintainability</h1>
+<div class="sub">Phase 2: Model fundamentals and fine-tuning · Transformer internals</div>
+<div class="bar" aria-label="Roadmap progress"><span style="width:11.33%"></span></div>
+<div class="barlabel"><span>Roadmap progress 11.3%</span><span>Ends Sun 9 May 2027</span></div></header>
+<section class="tldr"><h2><span class="ico">⚡</span>Today in 30 seconds</h2><p>Kleppmann&#x27;s <em>Designing Data-Intensive Applications</em> gives three words for judging any data system: <strong>reliability</strong> (keeps working when things go wrong), <strong>scalability</strong> (copes as load grows) and <strong>maintainability</strong> (people can operate and change it). Today you restate Bastion&#x27;s non-functional requirements in this vocabulary and name one tradeoff. Plan about 2 hours.</p><p><strong>By the end of today you can:</strong></p><ul class="obj"><li>Define reliability, scalability and maintainability with precise sub-terms (faults vs failures, load parameters, percentiles, operability/simplicity/evolvability)</li><li>Rewrite Bastion&#x27;s non-functional requirements using this vocabulary and commit under bastion/docs/architecture/</li></ul></section>
+<section><h2><span class="ico">🧠</span>Concepts</h2><div class="grid"><article class="concept wide"><h3>1. The three concerns</h3><ul><li><strong>Reliability:</strong> continues to work correctly even when faults occur (hardware, software, human).</li><li><strong>Scalability:</strong> a reasonable way to deal with growth in load, data volume or complexity.</li><li><strong>Maintainability:</strong> many different people can work on it productively over time.</li></ul>
+<p>They often pull against each other, so naming which one wins in a decision is the architect&#x27;s job.</p><div class="diagram"><svg viewBox="0 0 598 124" role="img" aria-label="Three lenses for one system." xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><g style="color:var(--muted)" font-family="system-ui,sans-serif" font-size="13"><rect x="10" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Reliability</text><text x="95.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">tolerate faults</text><line x1="182" y1="47.0" x2="210" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="214" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="299.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Scalability</text><text x="299.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">handle growth</text><line x1="386" y1="47.0" x2="414" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="418" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="503.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Maintainability</text><text x="503.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">operate and evolve</text></g></svg><div class="counter">Three lenses for one system.</div></div></article><article class="concept wide"><h3>2. Reliability: faults vs failures</h3><p>A <strong>fault</strong> is one component deviating from spec; a <strong>failure</strong> is the whole system stopping service. Goal: fault-tolerance so faults do not become failures.</p><div class="tablewrap"><table><thead><tr><th>Fault</th><th>Example</th><th>Mitigation</th></tr></thead><tbody><tr><td>Hardware</td><td>Host dies</td><td>Replicas, health checks</td></tr><tr><td>Software</td><td>Bad release, provider outage</td><td>Canary, retries, fallback</td></tr><tr><td>Human</td><td>Wrong config</td><td>Review, rollback</td></tr></tbody></table></div></article><article class="concept wide"><h3>3. Scalability: describe load, then performance</h3><p>Pick <strong>load parameters</strong> (requests/sec, tokens per request, concurrent sessions, documents indexed). Then measure performance with <strong>percentiles</strong>, not averages: p50 is typical, p95/p99 are tail latency. Tail latency matters because slow calls compound when a request fans out to many backends.</p>
+<p>Scaling up (bigger machine) is simple; scaling out (more machines) adds distribution complexity. Elastic systems suit unpredictable load; manual scaling is simpler to reason about.</p><div class="diagram"><svg class="bars" viewBox="0 0 560 100" role="img" aria-label="Illustrative latency percentiles (example numbers, ms)." xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif" font-size="13"><text x="162" y="23" text-anchor="end" fill="var(--ink)">p50</text><rect x="170" y="9" width="41.3" height="20" rx="5" fill="var(--accent)"/><text x="217.3" y="23" fill="var(--muted)">800ms</text><text x="162" y="53" text-anchor="end" fill="var(--ink)">p95</text><rect x="170" y="39" width="124.0" height="20" rx="5" fill="var(--accent)"/><text x="300.0" y="53" fill="var(--muted)">2400ms</text><text x="162" y="83" text-anchor="end" fill="var(--ink)">p99</text><rect x="170" y="69" width="310.0" height="20" rx="5" fill="var(--accent)"/><text x="486.0" y="83" fill="var(--muted)">6000ms</text></svg><div class="counter">Illustrative latency percentiles (example numbers, ms).</div></div></article><article class="concept"><h3>4. Maintainability: three sub-goals</h3><ul><li><strong>Operability:</strong> make routine operations easy (observability, runbooks, sane defaults).</li><li><strong>Simplicity:</strong> remove accidental complexity through good abstractions.</li><li><strong>Evolvability:</strong> make change easy (modular design, tests, swappable model/provider).</li></ul></article><article class="concept"><h3>5. Turning vague requirements into measurable ones</h3><p>Replace &#x27;fast and reliable&#x27; with: <em>&#x27;99% of triage verdicts return within 5 s; 99.5% monthly availability; a provider outage degrades to a queued response rather than an error.&#x27;</em> Each requirement gets a metric, a target and a measurement window (an SLI, SLO pairing).</p></article></div></section>
+<section><h2><span class="ico">✅</span>Hands-on task</h2><p>Read Part I (chapter 1) of DDIA, then do the exercise.</p><ul class="check"><li><input type="checkbox" id="t0" aria-label="task 1"><label for="t0">Read DDIA Part I / chapter 1 (reliability, scalability, maintainability)</label></li><li><input type="checkbox" id="t1" aria-label="task 2"><label for="t1">List Bastion&#x27;s current non-functional requirements</label></li><li><input type="checkbox" id="t2" aria-label="task 3"><label for="t2">Rewrite each under reliability, scalability or maintainability with a metric and target</label></li><li><input type="checkbox" id="t3" aria-label="task 4"><label for="t3">State one explicit tradeoff (e.g. latency vs cost, or availability vs consistency)</label></li><li><input type="checkbox" id="t4" aria-label="task 5"><label for="t4">Keep it to one page and commit under bastion/docs/architecture/</label></li></ul><div class="counter" id="checkCount"></div></section>
+<div class="callout sec"><h2>🛡 Security lens</h2><p>The model sees one flat token stream — no hardware boundary between instructions and data. Read Greshake et al., indirect prompt injection: <a href="https://arxiv.org/abs/2302.12173" target="_blank" rel="noopener">https://arxiv.org/abs/2302.12173</a>.</p></div>
+<div class="callout arch"><h2>🏛 Architecture track</h2><p>Exercise: rewrite Bastion&#x27;s non-functional requirements using DDIA&#x27;s vocabulary. Done when it is at most 1 page, committed, and one tradeoff is stated.</p></div>
+<section><h2><span class="ico">📚</span>Resources</h2><ul class="res"><li><a href="https://dataintensive.net/" target="_blank" rel="noopener">DDIA book site</a> — Part I foundations; 2nd ed. also on O&#x27;Reilly</li></ul></section>
+<section><h2><span class="ico">🃏</span>Recall quiz <span class="counter">(tap a card to flip)</span></h2><div class="quiz"><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Difference between a fault and a failure?</div><small>Q1 · tap to reveal</small></div><div class="face back"><div>A fault is one component deviating from spec; a failure is the system as a whole no longer providing service.</div><small>A1</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why use percentiles rather than average latency?</div><small>Q2 · tap to reveal</small></div><div class="face back"><div>Averages hide the slow tail; p95/p99 show what unlucky users experience.</div><small>A2</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Name the three sub-goals of maintainability.</div><small>Q3 · tap to reveal</small></div><div class="face back"><div>Operability, simplicity, evolvability.</div><small>A3</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Name one tradeoff in Bastion between these concerns.</div><small>Q4 · tap to reveal</small></div><div class="face back"><div>Example: adding fallback models improves reliability but raises cost and operational complexity.</div><small>A4</small></div></div></button></div></section>
+<section class="tomorrow"><h2><span class="ico">🔭</span>Tomorrow</h2><p>Next plan day.</p></section>
+<footer>Generated from the AI Engineering Roadmap daily plan · Day 23 of 203 · Times in Asia/Kolkata</footer>
+</div>
+<script>
+(function(){
+  var root=document.documentElement, key='bastion-theme';
+  var saved=localStorage.getItem(key);
+  var dark=saved?saved==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  root.setAttribute('data-theme',dark?'dark':'light');
+  var btn=document.getElementById('themeToggle');
+  function label(){btn.textContent=root.getAttribute('data-theme')==='dark'?'☀ Light':'☾ Dark';}
+  if(btn){label();btn.addEventListener('click',function(){var d=root.getAttribute('data-theme')==='dark'?'light':'dark';root.setAttribute('data-theme',d);localStorage.setItem(key,d);label();rerenderMermaid();});}
+  // checklist persistence
+  var day=document.getElementById('app').dataset.day;
+  var boxes=document.querySelectorAll('.check input[type=checkbox]');
+  function count(){var n=0;boxes.forEach(function(b){if(b.checked)n++;});var c=document.getElementById('checkCount');if(c)c.textContent=n+' / '+boxes.length+' done';}
+  boxes.forEach(function(b,i){var k='bastion-day-'+day+'-task-'+i;b.checked=localStorage.getItem(k)==='1';b.closest('li').classList.toggle('done',b.checked);
+    b.addEventListener('change',function(){localStorage.setItem(k,b.checked?'1':'0');b.closest('li').classList.toggle('done',b.checked);count();});});
+  count();
+  // flip cards
+  document.querySelectorAll('.card').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('flipped');c.setAttribute('aria-pressed',c.classList.contains('flipped'));});});
+  // mermaid (optional, CDN) with graceful fallback
+  var hasMermaid=document.querySelector('.mermaid');
+  window.rerenderMermaid=function(){};
+  if(!hasMermaid)return;
+  var sources=[];document.querySelectorAll('.mermaid').forEach(function(el){sources.push(el.textContent);});
+  function fallback(){document.body.classList.add('no-mermaid');}
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+  s.async=true;
+  var timer=setTimeout(fallback,6000);
+  s.onload=function(){clearTimeout(timer);try{render();}catch(e){fallback();}};
+  s.onerror=function(){clearTimeout(timer);fallback();};
+  function render(){
+    var d=root.getAttribute('data-theme')==='dark';
+    window.mermaid.initialize({startOnLoad:false,theme:d?'dark':'default',securityLevel:'strict',fontFamily:'system-ui, sans-serif'});
+    document.querySelectorAll('.mermaid').forEach(function(el,i){el.removeAttribute('data-processed');el.textContent=sources[i];});
+    window.mermaid.run({querySelector:'.mermaid'}).catch(fallback);
+  }
+  window.rerenderMermaid=function(){if(window.mermaid){try{render();}catch(e){fallback();}}};
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>

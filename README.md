@@ -2,7 +2,7 @@
 
 Daily visual lessons from a **29-week** (203-day) AI engineering roadmap covering four roles — **AI engineer**, **AI architect**, **AI security engineer**, and **AI platform engineer** — plus a parallel general architecture track.
 
-The plan runs **Mon 19 Oct 2026 – Sun 9 May 2027** (times in Asia/Kolkata). This repository currently publishes **Days 1–22** of 203 as both Markdown and self-contained HTML. New days are added here as they are written.
+The plan runs **Mon 19 Oct 2026 – Sun 9 May 2027** (times in Asia/Kolkata). This repository currently publishes **Days 1–23** of 203 as both Markdown and self-contained HTML. New days are added here as they are written.
 
 The capstone through-line is **Project Bastion**, a threat-modelled, multi-tenant AI agent platform built week by week.
 
@@ -50,6 +50,7 @@ The capstone through-line is **Project Bastion**, a threat-modelled, multi-tenan
 | 20 | Deep work: build Milestone M1, the tested LLM-backed triage API | 3: Testing an LLM service (M1) | Phase 1: LLM and application foundations | [day-020.md](lessons/day-020.md) | [page](html/day-020.html) · [GitHub Pages](https://suganthikannan093-hue.github.io/ai-engineering-roadmap-lessons/html/day-020.html) · [preview](https://htmlpreview.github.io/?https://github.com/suganthikannan093-hue/ai-engineering-roadmap-lessons/blob/main/html/day-020.html) |
 | 21 | Finish, verify acceptance criteria and ship Milestone M1 | 3: Testing an LLM service (M1) | Phase 1: LLM and application foundations | [day-021.md](lessons/day-021.md) | [page](html/day-021.html) · [GitHub Pages](https://suganthikannan093-hue.github.io/ai-engineering-roadmap-lessons/html/day-021.html) · [preview](https://htmlpreview.github.io/?https://github.com/suganthikannan093-hue/ai-engineering-roadmap-lessons/blob/main/html/day-021.html) |
 | 22 | Transformer internals: concepts I | 4: Transformer internals | Phase 2: Model fundamentals and fine-tuning | [day-022.md](lessons/day-022.md) | [page](html/day-022.html) · [GitHub Pages](https://suganthikannan093-hue.github.io/ai-engineering-roadmap-lessons/html/day-022.html) · [preview](https://htmlpreview.github.io/?https://github.com/suganthikannan093-hue/ai-engineering-roadmap-lessons/blob/main/html/day-022.html) |
+| 23 | Architecture track: Data-intensive systems: reliability, scalability, maintainability | 4: Transformer internals | Phase 2: Model fundamentals and fine-tuning | [day-023.md](lessons/day-023.md) | [page](html/day-023.html) · [GitHub Pages](https://suganthikannan093-hue.github.io/ai-engineering-roadmap-lessons/html/day-023.html) · [preview](https://htmlpreview.github.io/?https://github.com/suganthikannan093-hue/ai-engineering-roadmap-lessons/blob/main/html/day-023.html) |
 
 ## Formats
 
