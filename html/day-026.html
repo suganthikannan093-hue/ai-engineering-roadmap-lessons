@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 26: Recall + security lens: Transformer internals</title>
+<script>(function(){try{var s=localStorage.getItem('bastion-theme');var d=s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();</script>
+<style>
+:root{--bg:#f7f8fb;--card:#ffffff;--ink:#1b2130;--muted:#5d6678;--line:#e3e7ef;--accent:#2f6fec;--accent-soft:#e8f0ff;
+--sec:#c0392b;--sec-soft:#fdecea;--arch:#7a4ce0;--arch-soft:#f1ebff;--ok:#1f9d63;--ok-soft:#e6f6ee;--warn:#b7791f;--warn-soft:#fff6e0;
+--code-bg:#f4f6fa;--kw:#8a2be2;--str:#0b7a3e;--num:#b35900;--com:#7b8494;--fn:#1f5fbf;--bi:#a0306a;--shadow:0 1px 2px rgba(20,30,60,.06),0 4px 14px rgba(20,30,60,.06)}
+[data-theme="dark"]{--bg:#0f131a;--card:#171c26;--ink:#e6e9f0;--muted:#9aa3b5;--line:#2a3140;--accent:#6ea0ff;--accent-soft:#1c2740;
+--sec:#ff7b6b;--sec-soft:#3a1f1d;--arch:#b597ff;--arch-soft:#271f3d;--ok:#4fd39a;--ok-soft:#173027;--warn:#f0c060;--warn-soft:#352b14;
+--code-bg:#11161f;--kw:#c792ea;--str:#a5e075;--num:#f78c6c;--com:#6b7689;--fn:#82aaff;--bi:#ff9cac;--shadow:none}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+header.hero{background:linear-gradient(135deg,var(--accent) 0%,#5b3fd6 100%);color:#fff;border-radius:18px;padding:22px 22px 18px;box-shadow:var(--shadow);position:relative}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;opacity:.95}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.18);white-space:nowrap}
+.hero h1{margin:10px 0 6px;font-size:clamp(22px,4vw,30px);line-height:1.2}
+.hero .sub{opacity:.9;font-size:14px}
+.bar{height:8px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;margin-top:12px}
+.bar>span{display:block;height:100%;background:#fff;border-radius:99px}
+.barlabel{display:flex;justify-content:space-between;font-size:12px;margin-top:4px;opacity:.9}
+.toggle{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:13px}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:16px 0;box-shadow:var(--shadow)}
+section>h2{margin:0 0 10px;font-size:19px;display:flex;align-items:center;gap:8px}
+.ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:15px}
+.tldr{border-left:5px solid var(--accent)}
+.tldr p{margin:.3em 0}
+ul.obj{margin:.4em 0 0;padding-left:1.2em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.concept{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--card)}
+.concept h3{margin:0 0 6px;font-size:16.5px}
+.concept p{margin:.45em 0}
+.concept.wide{grid-column:1/-1}
+.analogy{background:var(--warn-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+.analogy b{color:var(--warn)}
+.diagram{margin:10px 0;overflow-x:auto}
+.diagram svg{max-width:100%;height:auto;display:block}
+.diagram svg.bars{max-width:620px}
+blockquote{margin:.6em 0;padding:8px 14px;border-left:4px solid var(--line);color:var(--muted);font-style:italic}
+.mermaid-fallback{display:none}
+.no-mermaid .mermaid{display:none}
+.no-mermaid .mermaid-fallback{display:block}
+.tablewrap{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft);color:var(--ink)}
+tr:nth-child(even) td{background:color-mix(in srgb,var(--card) 94%,var(--ink) 6%)}
+.rule{background:var(--ok-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+pre.code{background:var(--code-bg);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;margin:8px 0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:.92em;background:var(--code-bg);padding:1px 5px;border-radius:5px}
+pre code{background:none;padding:0}
+.k{color:var(--kw);font-weight:600}.s{color:var(--str)}.n{color:var(--num)}.c{color:var(--com);font-style:italic}.f{color:var(--fn)}.b{color:var(--bi)}
+.check{list-style:none;padding:0;margin:6px 0}
+.check li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin:6px 0}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--ok);flex:none}
+.check li.done{background:var(--ok-soft);text-decoration:line-through;color:var(--muted)}
+.counter{font-size:13px;color:var(--muted)}
+.callout{border-radius:14px;padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout h2{margin:0 0 6px;font-size:17px}
+.callout.sec{background:var(--sec-soft);border-left:6px solid var(--sec)}
+.callout.sec h2{color:var(--sec)}
+.callout.arch{background:var(--arch-soft);border-left:6px solid var(--arch)}
+.callout.arch h2{color:var(--arch)}
+.callout p{margin:.4em 0}
+.res li{margin:5px 0}
+.quiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{perspective:1000px;cursor:pointer;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit}
+.card .inner{display:grid;transition:transform .5s;transform-style:preserve-3d;min-height:130px}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;padding:14px;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.front{background:var(--accent-soft)}
+.back{background:var(--ok-soft);transform:rotateY(180deg)}
+.face small{color:var(--muted);font-size:12px;margin-top:8px}
+.tomorrow{border-left:5px solid var(--arch)}
+footer{color:var(--muted);font-size:12.5px;text-align:center;padding:10px 0 30px}
+@media (max-width:600px){.wrap{padding:10px}section{padding:14px}header.hero{padding:18px 16px}.toggle{top:10px;right:10px}}
+@media print{.toggle{display:none}.card .inner{transform:none!important}.back{transform:none;margin-top:6px}.face{backface-visibility:visible}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" data-day="26">
+<header class="hero"><button class="toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">☾ Dark</button>
+<div class="meta"><span class="pill">Day 26 / 203</span><span class="pill">Friday 2026-11-13</span><span class="pill">Week 4 / 29</span><span class="pill">⏱ 30 min</span><span class="pill">review</span></div>
+<h1>Recall + security lens: Transformer internals</h1>
+<div class="sub">Phase 2: Model fundamentals and fine-tuning · Transformer internals</div>
+<div class="bar" aria-label="Roadmap progress"><span style="width:12.81%"></span></div>
+<div class="barlabel"><span>Roadmap progress 12.8%</span><span>Ends Sun 9 May 2027</span></div></header>
+<section class="tldr"><h2><span class="ico">⚡</span>Today in 30 seconds</h2><p>A 30-minute review day. First <strong>recall without notes</strong> the week&#x27;s pieces: embeddings, self-attention, multi-head attention, positional encoding, the residual stream, logits, KV cache and decoding. Then apply the <strong>security lens</strong>: a transformer reads one flat token stream, so instructions and data are not separated by any hardware boundary. That is the root of <strong>indirect prompt injection</strong>.</p><p><strong>By the end of today you can:</strong></p><ul class="obj"><li>Active recall of the week&#x27;s concepts</li><li>Read and act on the week&#x27;s security lens</li></ul></section>
+<section><h2><span class="ico">🧠</span>Concepts</h2><div class="grid"><article class="concept wide"><h3>1. The week in one pipeline</h3><p>Walk this chain from memory, then check yourself:</p>
+<ul><li><strong>Tokens → embeddings:</strong> each token ID becomes a vector.</li><li><strong>Positional encoding:</strong> adds order information, since attention alone is order-blind.</li><li><strong>Self-attention / multi-head:</strong> each token mixes in information from other tokens; heads look for different relationships in parallel.</li><li><strong>Residual stream:</strong> every layer <em>adds</em> to a running vector instead of replacing it.</li><li><strong>Logits → softmax:</strong> final vector becomes a score per vocabulary token.</li><li><strong>Decoding:</strong> temperature, top-k, top-p or greedy picks the next token.</li><li><strong>KV cache:</strong> stores past keys/values so each new token costs one step, not a full recompute.</li></ul><div class="diagram"><svg viewBox="0 0 802 238" role="img" aria-label="Forward pass for one generated token." xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><g style="color:var(--muted)" font-family="system-ui,sans-serif" font-size="13"><rect x="10" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Tokens</text><text x="95.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">IDs</text><line x1="182" y1="47.0" x2="210" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="214" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="299.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Embed + position</text><text x="299.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">vectors</text><line x1="386" y1="47.0" x2="414" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="418" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="503.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Attention + MLP</text><text x="503.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">x N layers</text><line x1="590" y1="47.0" x2="618" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="622" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="707.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Logits</text><text x="707.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">score per token</text><path d="M707.0,86 V104 H95.0 V120" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="10" y="124" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="157.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Decode</text><text x="95.0" y="173.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">pick next token</text></g></svg><div class="counter">Forward pass for one generated token.</div></div></article><article class="concept wide"><h3>2. Recall prompts (answer without notes)</h3><p>Write 1-2 sentences each:</p>
+<ul><li>Why does attention need positional information?</li><li>What does multi-head attention give you over one head?</li><li>Why is the residual stream a useful mental model?</li><li>What does temperature do to the logits distribution?</li><li>Why does the KV cache speed up generation, and what does it cost (memory)?</li><li>When would you choose greedy vs top-p sampling?</li></ul>
+<p>Mark each answer <strong>solid / shaky / blank</strong>. Shaky and blank items are tomorrow&#x27;s re-reading list.</p></article><article class="concept wide"><h3>3. Security lens: one flat token stream</h3><p>A CPU separates code from data with memory protections. A transformer has <strong>no such boundary</strong>: system prompt, user message, retrieved documents and tool output all become tokens in the same sequence, and attention can let any token influence any later one.</p>
+<ul><li><strong>Direct injection:</strong> the user types hostile instructions.</li><li><strong>Indirect injection:</strong> hostile instructions hide in content the model reads (web page, email, document, tool result). This is the Greshake et al. paper&#x27;s central point.</li><li><strong>Consequence:</strong> treat all retrieved or tool content as <em>untrusted input</em>, and limit what the model can do with tools regardless of what it is told.</li></ul><div class="tablewrap"><table><thead><tr><th>Mitigation</th><th>Helps with</th><th>Limit</th></tr></thead><tbody><tr><td>Clear delimiters and role labelling</td><td>Reduces accidental confusion</td><td>Not a hard boundary; models can still follow injected text</td></tr><tr><td>Least-privilege tools and scoped credentials</td><td>Limits blast radius</td><td>Needs design up front</td></tr><tr><td>Human approval for risky actions</td><td>Stops irreversible harm</td><td>Adds friction</td></tr><tr><td>Output filtering and monitoring</td><td>Catches exfiltration patterns</td><td>Incomplete; attackers adapt</td></tr></tbody></table></div></article></div></section>
+<section><h2><span class="ico">✅</span>Hands-on task</h2><p>Answer the recall prompts without notes, then do the security lens item (or plan it for the weekend).</p><ul class="check"><li><input type="checkbox" id="t0" aria-label="task 1"><label for="t0">Answer all six recall prompts from memory and mark each solid/shaky/blank</label></li><li><input type="checkbox" id="t1" aria-label="task 2"><label for="t1">Note the gaps as a re-reading list</label></li><li><input type="checkbox" id="t2" aria-label="task 3"><label for="t2">Read the Greshake et al. paper abstract and introduction (or schedule the full read with a concrete time)</label></li><li><input type="checkbox" id="t3" aria-label="task 4"><label for="t3">Write down one tool in a system you know that should have narrower permissions</label></li></ul><div class="counter" id="checkCount"></div></section>
+<div class="callout sec"><h2>🛡 Security lens</h2><p>Treat every token that did not come from you as untrusted: retrieved text, web pages and tool output can all carry instructions.</p></div>
+<div class="callout arch"><h2>🏛 Architecture track</h2><p>This week&#x27;s architecture track (Tuesday 2026-11-10): <strong>Data-intensive systems: reliability, scalability, maintainability</strong>. Exercise: Rewrite Bastion&#x27;s non-functional requirements using DDIA&#x27;s reliability/scalability/maintainability vocabulary.</p></div>
+<section><h2><span class="ico">📚</span>Resources</h2><ul class="res"><li><a href="https://arxiv.org/abs/2302.12173" target="_blank" rel="noopener">Greshake et al., Not what you&#x27;ve signed up for (indirect prompt injection)</a> — The security lens reading for this week</li></ul></section>
+<section><h2><span class="ico">🃏</span>Recall quiz <span class="counter">(tap a card to flip)</span></h2><div class="quiz"><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why can&#x27;t a model enforce a boundary between instructions and data?</div><small>Q1 · tap to reveal</small></div><div class="face back"><div>Everything is tokens in one sequence, and attention lets any token influence the output. Separation is only learned behaviour, not an enforced mechanism.</div><small>A1</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What is indirect prompt injection?</div><small>Q2 · tap to reveal</small></div><div class="face back"><div>Hostile instructions embedded in content the model ingests (pages, documents, tool output) rather than typed by the user.</div><small>A2</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What does the KV cache store, and what is the trade-off?</div><small>Q3 · tap to reveal</small></div><div class="face back"><div>Past keys and values per layer, so each new token needs only one step; the cost is memory that grows with context length.</div><small>A3</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What does raising temperature do?</div><small>Q4 · tap to reveal</small></div><div class="face back"><div>Flattens the next-token distribution, making output more varied and less predictable.</div><small>A4</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Name two mitigations that limit damage even if an injection succeeds.</div><small>Q5 · tap to reveal</small></div><div class="face back"><div>Least-privilege tool access and human approval for risky actions.</div><small>A5</small></div></div></button></div></section>
+<section class="tomorrow"><h2><span class="ico">🔭</span>Tomorrow</h2><p>Next up is the following day on the roadmap.</p></section>
+<footer>Generated from the AI Engineering Roadmap daily plan · Day 26 of 203 · Times in Asia/Kolkata</footer>
+</div>
+<script>
+(function(){
+  var root=document.documentElement, key='bastion-theme';
+  var saved=localStorage.getItem(key);
+  var dark=saved?saved==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  root.setAttribute('data-theme',dark?'dark':'light');
+  var btn=document.getElementById('themeToggle');
+  function label(){btn.textContent=root.getAttribute('data-theme')==='dark'?'☀ Light':'☾ Dark';}
+  if(btn){label();btn.addEventListener('click',function(){var d=root.getAttribute('data-theme')==='dark'?'light':'dark';root.setAttribute('data-theme',d);localStorage.setItem(key,d);label();rerenderMermaid();});}
+  // checklist persistence
+  var day=document.getElementById('app').dataset.day;
+  var boxes=document.querySelectorAll('.check input[type=checkbox]');
+  function count(){var n=0;boxes.forEach(function(b){if(b.checked)n++;});var c=document.getElementById('checkCount');if(c)c.textContent=n+' / '+boxes.length+' done';}
+  boxes.forEach(function(b,i){var k='bastion-day-'+day+'-task-'+i;b.checked=localStorage.getItem(k)==='1';b.closest('li').classList.toggle('done',b.checked);
+    b.addEventListener('change',function(){localStorage.setItem(k,b.checked?'1':'0');b.closest('li').classList.toggle('done',b.checked);count();});});
+  count();
+  // flip cards
+  document.querySelectorAll('.card').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('flipped');c.setAttribute('aria-pressed',c.classList.contains('flipped'));});});
+  // mermaid (optional, CDN) with graceful fallback
+  var hasMermaid=document.querySelector('.mermaid');
+  window.rerenderMermaid=function(){};
+  if(!hasMermaid)return;
+  var sources=[];document.querySelectorAll('.mermaid').forEach(function(el){sources.push(el.textContent);});
+  function fallback(){document.body.classList.add('no-mermaid');}
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+  s.async=true;
+  var timer=setTimeout(fallback,6000);
+  s.onload=function(){clearTimeout(timer);try{render();}catch(e){fallback();}};
+  s.onerror=function(){clearTimeout(timer);fallback();};
+  function render(){
+    var d=root.getAttribute('data-theme')==='dark';
+    window.mermaid.initialize({startOnLoad:false,theme:d?'dark':'default',securityLevel:'strict',fontFamily:'system-ui, sans-serif'});
+    document.querySelectorAll('.mermaid').forEach(function(el,i){el.removeAttribute('data-processed');el.textContent=sources[i];});
+    window.mermaid.run({querySelector:'.mermaid'}).catch(fallback);
+  }
+  window.rerenderMermaid=function(){if(window.mermaid){try{render();}catch(e){fallback();}}};
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>
