@@ -2,7 +2,7 @@
 
 Daily visual lessons from a **29-week** (203-day) AI engineering roadmap covering four roles — **AI engineer**, **AI architect**, **AI security engineer**, and **AI platform engineer** — plus a parallel general architecture track.
 
-The plan runs **Mon 19 Oct 2026 – Sun 9 May 2027** (times in Asia/Kolkata). This repository currently publishes **Days 1–26** of 203 as both Markdown and self-contained HTML. New days are added here as they are written.
+The plan runs **Mon 19 Oct 2026 – Sun 9 May 2027** (times in Asia/Kolkata). This repository currently publishes **Days 1–27** of 203 as both Markdown and self-contained HTML. New days are added here as they are written.
 
 The capstone through-line is **Project Bastion**, a threat-modelled, multi-tenant AI agent platform built week by week.
 
@@ -54,6 +54,7 @@ The capstone through-line is **Project Bastion**, a threat-modelled, multi-tenan
 | 24 | Transformer internals: concepts II + decision guides | 4: Transformer internals | Phase 2: Model fundamentals and fine-tuning | [day-024.md](lessons/day-024.md) | [page](html/day-024.html) · [GitHub Pages](https://suganthikannan093-hue.github.io/ai-engineering-roadmap-lessons/html/day-024.html) · [preview](https://htmlpreview.github.io/?https://github.com/suganthikannan093-hue/ai-engineering-roadmap-lessons/blob/main/html/day-024.html) |
 | 25 | Lab prep: Transformer internals | 4: Transformer internals | Phase 2: Model fundamentals and fine-tuning | [day-025.md](lessons/day-025.md) | [page](html/day-025.html) · [GitHub Pages](https://suganthikannan093-hue.github.io/ai-engineering-roadmap-lessons/html/day-025.html) · [preview](https://htmlpreview.github.io/?https://github.com/suganthikannan093-hue/ai-engineering-roadmap-lessons/blob/main/html/day-025.html) |
 | 26 | Recall + security lens: Transformer internals | 4: Transformer internals | Phase 2: Model fundamentals and fine-tuning | [day-026.md](lessons/day-026.md) | [page](html/day-026.html) · [GitHub Pages](https://suganthikannan093-hue.github.io/ai-engineering-roadmap-lessons/html/day-026.html) · [preview](https://htmlpreview.github.io/?https://github.com/suganthikannan093-hue/ai-engineering-roadmap-lessons/blob/main/html/day-026.html) |
+| 27 | Deep work: lab — Transformer internals | 4: Transformer internals | Phase 2: Model fundamentals and fine-tuning | [day-027.md](lessons/day-027.md) | [page](html/day-027.html) · [GitHub Pages](https://suganthikannan093-hue.github.io/ai-engineering-roadmap-lessons/html/day-027.html) · [preview](https://htmlpreview.github.io/?https://github.com/suganthikannan093-hue/ai-engineering-roadmap-lessons/blob/main/html/day-027.html) |
 
 ## Formats
 
