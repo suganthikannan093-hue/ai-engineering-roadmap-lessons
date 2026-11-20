@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 28: Ship week 4: finish lab, security lens, tracker</title>
+<script>(function(){try{var s=localStorage.getItem('bastion-theme');var d=s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();</script>
+<style>
+:root{--bg:#f7f8fb;--card:#ffffff;--ink:#1b2130;--muted:#5d6678;--line:#e3e7ef;--accent:#2f6fec;--accent-soft:#e8f0ff;
+--sec:#c0392b;--sec-soft:#fdecea;--arch:#7a4ce0;--arch-soft:#f1ebff;--ok:#1f9d63;--ok-soft:#e6f6ee;--warn:#b7791f;--warn-soft:#fff6e0;
+--code-bg:#f4f6fa;--kw:#8a2be2;--str:#0b7a3e;--num:#b35900;--com:#7b8494;--fn:#1f5fbf;--bi:#a0306a;--shadow:0 1px 2px rgba(20,30,60,.06),0 4px 14px rgba(20,30,60,.06)}
+[data-theme="dark"]{--bg:#0f131a;--card:#171c26;--ink:#e6e9f0;--muted:#9aa3b5;--line:#2a3140;--accent:#6ea0ff;--accent-soft:#1c2740;
+--sec:#ff7b6b;--sec-soft:#3a1f1d;--arch:#b597ff;--arch-soft:#271f3d;--ok:#4fd39a;--ok-soft:#173027;--warn:#f0c060;--warn-soft:#352b14;
+--code-bg:#11161f;--kw:#c792ea;--str:#a5e075;--num:#f78c6c;--com:#6b7689;--fn:#82aaff;--bi:#ff9cac;--shadow:none}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+header.hero{background:linear-gradient(135deg,var(--accent) 0%,#5b3fd6 100%);color:#fff;border-radius:18px;padding:22px 22px 18px;box-shadow:var(--shadow);position:relative}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;opacity:.95}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.18);white-space:nowrap}
+.hero h1{margin:10px 0 6px;font-size:clamp(22px,4vw,30px);line-height:1.2}
+.hero .sub{opacity:.9;font-size:14px}
+.bar{height:8px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;margin-top:12px}
+.bar>span{display:block;height:100%;background:#fff;border-radius:99px}
+.barlabel{display:flex;justify-content:space-between;font-size:12px;margin-top:4px;opacity:.9}
+.toggle{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:13px}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:16px 0;box-shadow:var(--shadow)}
+section>h2{margin:0 0 10px;font-size:19px;display:flex;align-items:center;gap:8px}
+.ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:15px}
+.tldr{border-left:5px solid var(--accent)}
+.tldr p{margin:.3em 0}
+ul.obj{margin:.4em 0 0;padding-left:1.2em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.concept{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--card)}
+.concept h3{margin:0 0 6px;font-size:16.5px}
+.concept p{margin:.45em 0}
+.concept.wide{grid-column:1/-1}
+.analogy{background:var(--warn-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+.analogy b{color:var(--warn)}
+.diagram{margin:10px 0;overflow-x:auto}
+.diagram svg{max-width:100%;height:auto;display:block}
+.diagram svg.bars{max-width:620px}
+blockquote{margin:.6em 0;padding:8px 14px;border-left:4px solid var(--line);color:var(--muted);font-style:italic}
+.mermaid-fallback{display:none}
+.no-mermaid .mermaid{display:none}
+.no-mermaid .mermaid-fallback{display:block}
+.tablewrap{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft);color:var(--ink)}
+tr:nth-child(even) td{background:color-mix(in srgb,var(--card) 94%,var(--ink) 6%)}
+.rule{background:var(--ok-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+pre.code{background:var(--code-bg);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;margin:8px 0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:.92em;background:var(--code-bg);padding:1px 5px;border-radius:5px}
+pre code{background:none;padding:0}
+.k{color:var(--kw);font-weight:600}.s{color:var(--str)}.n{color:var(--num)}.c{color:var(--com);font-style:italic}.f{color:var(--fn)}.b{color:var(--bi)}
+.check{list-style:none;padding:0;margin:6px 0}
+.check li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin:6px 0}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--ok);flex:none}
+.check li.done{background:var(--ok-soft);text-decoration:line-through;color:var(--muted)}
+.counter{font-size:13px;color:var(--muted)}
+.callout{border-radius:14px;padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout h2{margin:0 0 6px;font-size:17px}
+.callout.sec{background:var(--sec-soft);border-left:6px solid var(--sec)}
+.callout.sec h2{color:var(--sec)}
+.callout.arch{background:var(--arch-soft);border-left:6px solid var(--arch)}
+.callout.arch h2{color:var(--arch)}
+.callout p{margin:.4em 0}
+.res li{margin:5px 0}
+.quiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{perspective:1000px;cursor:pointer;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit}
+.card .inner{display:grid;transition:transform .5s;transform-style:preserve-3d;min-height:130px}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;padding:14px;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.front{background:var(--accent-soft)}
+.back{background:var(--ok-soft);transform:rotateY(180deg)}
+.face small{color:var(--muted);font-size:12px;margin-top:8px}
+.tomorrow{border-left:5px solid var(--arch)}
+footer{color:var(--muted);font-size:12.5px;text-align:center;padding:10px 0 30px}
+@media (max-width:600px){.wrap{padding:10px}section{padding:14px}header.hero{padding:18px 16px}.toggle{top:10px;right:10px}}
+@media print{.toggle{display:none}.card .inner{transform:none!important}.back{transform:none;margin-top:6px}.face{backface-visibility:visible}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" data-day="28">
+<header class="hero"><button class="toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">☾ Dark</button>
+<div class="meta"><span class="pill">Day 28 / 203</span><span class="pill">Sunday 2026-11-15</span><span class="pill">Week 4 / 29</span><span class="pill">⏱ 150 min</span><span class="pill">ship</span></div>
+<h1>Ship week 4: finish lab, security lens, tracker</h1>
+<div class="sub">Phase 2: Model fundamentals and fine-tuning · Transformer internals · Guides G3</div>
+<div class="bar" aria-label="Roadmap progress"><span style="width:13.79%"></span></div>
+<div class="barlabel"><span>Roadmap progress 13.8%</span><span>Ends Sun 9 May 2027</span></div></header>
+<section class="tldr"><h2><span class="ico">⚡</span>Today in 30 seconds</h2><p>Today is a <strong>ship day</strong>. You close out week 4 (Transformer internals): finish the lab from Day 27, check it against acceptance criteria, write down the security lens item, and fill in your progress tracker. The aim is a <em>committed, reproducible artefact</em> plus a one-sentence outcome for the week, not new material.</p><p><strong>By the end of today you can:</strong></p><ul class="obj"><li>Finish and verify the week 4 lab artefact</li><li>Write down the security lens: one flat token stream</li><li>Update docs/PROGRESS.md and your brag doc</li></ul></section>
+<section><h2><span class="ico">🧠</span>Concepts</h2><div class="grid"><article class="concept wide"><h3>1. Ship checklist (about 150 minutes)</h3><ul><li><strong>0:00-0:45</strong> Finish loose ends from the lab: rerun the nanoGPT sample and the top-10 probe from a clean shell.</li><li><strong>0:45-1:15</strong> Check acceptance criteria: code runs, <code>RESULTS.md</code> has your measurements (loss, entropy, top-token probability).</li><li><strong>1:15-1:45</strong> Write the security lens note and one short ADR (for example: why you picked that small model and decoding settings).</li><li><strong>1:45-2:30</strong> Update <code>docs/PROGRESS.md</code>, brag doc, commit and push.</li></ul><div class="diagram"><svg viewBox="0 0 802 238" role="img" aria-label="Ship flow." xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><g style="color:var(--muted)" font-family="system-ui,sans-serif" font-size="13"><rect x="10" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Finish</text><text x="95.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">loose ends</text><line x1="182" y1="47.0" x2="210" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="214" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="299.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Verify</text><text x="299.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">clean rerun</text><line x1="386" y1="47.0" x2="414" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="418" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="503.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Write</text><text x="503.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">lens + ADR</text><line x1="590" y1="47.0" x2="618" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="622" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="707.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Track</text><text x="707.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">progress row</text><path d="M707.0,86 V104 H95.0 V120" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="10" y="124" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="157.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Commit</text><text x="95.0" y="173.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">push</text></g></svg><div class="counter">Ship flow.</div></div></article><article class="concept wide"><h3>2. Security lens: one flat token stream</h3><p>A transformer receives <strong>one sequence of tokens</strong>. The system prompt, the user message, a retrieved web page and a tool result are all concatenated. There is no hardware boundary like user mode versus kernel mode; the &#x27;boundary&#x27; is only chat-template markers the model <em>learned</em> to respect.</p>
+<ul><li>Attention lets any token influence any later token, so injected text can compete with developer instructions.</li><li>Your Day 27 probe showed this: conflicting instructions <strong>split</strong> probability mass rather than one cleanly winning.</li><li>Consequence: treat model output influenced by untrusted text as untrusted, and enforce permissions <strong>outside</strong> the model.</li><li>Read Greshake et al., indirect prompt injection (link in resources).</li></ul><div class="tablewrap"><table><thead><tr><th>Layer</th><th>Boundary type</th><th>Reliable?</th></tr></thead><tbody><tr><td>OS process / user mode</td><td>Hardware-enforced</td><td>Yes</td></tr><tr><td>Chat template roles</td><td>Learned convention</td><td>No, probabilistic</td></tr><tr><td>Output filter / tool allow-list</td><td>Code outside the model</td><td>Yes, if correctly written</td></tr></tbody></table></div></article><article class="concept wide"><h3>3. Writing a good one-sentence outcome and ADR</h3><ul><li><strong>Outcome sentence:</strong> &#x27;I trained a tiny GPT and measured next-token distributions, showing that conflicting instructions split probability instead of flipping cleanly.&#x27;</li><li><strong>ADR shape:</strong> Context, Decision, Alternatives, Consequences. Keep it to half a page.</li><li><strong>Reviewer&#x27;s first challenge</strong> is usually: &#x27;how do you know this generalises beyond one model and one prompt?&#x27; Note your limits honestly (small model, few prompts).</li><li>Decision guide <strong>G3</strong> (model/decoding choice) from the roadmap applies: record which option you picked and why.</li></ul></article><article class="concept wide"><h3>4. Tracker and brag doc</h3><p>Fill one row per week: hours spent, outcome, guides touched. In the brag doc add a line with a <em>measurable</em> result, for example &#x27;entropy rose from X to Y with conflicting instructions&#x27;. Do not include confidential or employer-specific details.</p></article></div></section>
+<section><h2><span class="ico">⚖</span>When to choose which</h2><h3>G3. Adapting models</h3><div class="tablewrap"><table><thead><tr><th>Option</th><th>How it works</th><th>Pros</th><th>Cons</th><th>Choose when</th></tr></thead><tbody><tr><td>Prompting only</td><td>Instructions and examples in context</td><td>Zero training; instant iteration</td><td>Limited by context and base behaviour</td><td>Always try first</td></tr><tr><td>RAG</td><td>Retrieve relevant documents at query time and put them in context</td><td>Fresh, citable, permission-aware knowledge; no training</td><td>Retrieval quality is the bottleneck; injection surface</td><td>Knowledge that changes or must respect access control</td></tr><tr><td>Long context</td><td>Put whole documents in the window</td><td>Simple; no retrieval pipeline</td><td>Cost and latency per call; attention degrades mid-context</td><td>Few, bounded documents per request; analysis of one large artefact</td></tr><tr><td>Full fine-tuning</td><td>Update all weights on your data</td><td>Maximum adaptation</td><td>Expensive; needs lots of data; risk of forgetting and safety regression</td><td>Rarely; large orgs with big datasets and strong reasons</td></tr><tr><td>LoRA</td><td>Train small low-rank adapter matrices, freeze base weights</td><td>Cheap, small artefacts, swappable adapters</td><td>Slightly less capacity than full FT</td><td>Teaching format, style, task behaviour, classification</td></tr><tr><td>QLoRA</td><td>LoRA on a 4-bit quantised base model</td><td>Fine-tune 7-70B models on one GPU</td><td>Slower training; quantisation noise</td><td>Budget fine-tuning of mid-size models</td></tr><tr><td>Other adapters (prefix/prompt tuning, IA3)</td><td>Learn small extra vectors or scaling factors</td><td>Tiny parameter counts</td><td>Usually weaker than LoRA for LLMs</td><td>Very constrained memory or many tenants&#x27; adapters</td></tr><tr><td>RLHF (PPO with reward model)</td><td>Train a reward model on human preferences, optimise the policy against it</td><td>Strong alignment to preferences</td><td>Complex, unstable, costly</td><td>Frontier-lab-scale alignment work</td></tr><tr><td>DPO</td><td>Optimise directly on preference pairs (chosen vs rejected), no reward model</td><td>Simpler and stable; popular default for preference tuning</td><td>Needs good preference pairs</td><td>Steering tone, refusals, helpfulness with pairwise data</td></tr><tr><td>ORPO</td><td>Combines SFT and preference optimisation in one step without a reference model</td><td>One stage, cheaper</td><td>Newer, less battle-tested</td><td>Small teams doing SFT + preference in one pass</td></tr><tr><td>GRPO</td><td>RL using group-relative rewards from multiple sampled answers, no value model</td><td>Effective for verifiable tasks (maths, code)</td><td>Needs reward functions; RL complexity</td><td>Training reasoning on tasks with automatic checkers</td></tr><tr><td>Distillation</td><td>A strong teacher labels data; a smaller student learns from it</td><td>Big cost/latency reduction</td><td>Student inherits teacher errors; check provider terms on using outputs</td><td>High-volume narrow task once a big model performs it well</td></tr><tr><td>Continued pre-training</td><td>More next-token training on a large domain corpus</td><td>Deep domain fluency (language, jargon)</td><td>Expensive; needs lots of text; can erode instruction following</td><td>Very specialised domains with large unlabelled corpora</td></tr></tbody></table></div><div class="rule"><strong>Default:</strong> prompting, then RAG for knowledge, then LoRA/QLoRA for behaviour or cost, then distillation for scale. Fine-tuning rarely adds reliable new facts; RAG usually wins for knowledge.</div><p class="counter">Full guide: roadmap Section 9, <a href="../roadmap.html#g3-adapting-models">G3 Adapting models</a>.</p></section>
+<section><h2><span class="ico">🐍</span>Quick clean-run check</h2><p>Run from the lab repo to confirm everything reproduces and is committed.</p><pre class="code"><code>git status --short          <span class="c"># should be empty after commit</span>
+python -c <span class="s">&quot;import numpy; print(&#x27;numpy ok&#x27;)&quot;</span>
+grep -n <span class="s">&#x27;entropy&#x27;</span> RESULTS.md || echo <span class="s">&#x27;add entropy numbers to RESULTS.md&#x27;</span>
+git log --oneline | head -<span class="n">3</span></code></pre><p>A clean status, working imports and recorded numbers are the minimum bar for &#x27;shipped&#x27;.</p></section>
+<section><h2><span class="ico">✅</span>Hands-on task</h2><p>Finish the lab, check acceptance criteria, write the ADR and update the tracker.</p><ul class="check"><li><input type="checkbox" id="t0" aria-label="task 1"><label for="t0">Week&#x27;s lab artefact committed</label></li><li><input type="checkbox" id="t1" aria-label="task 2"><label for="t1">Security lens item written down</label></li><li><input type="checkbox" id="t2" aria-label="task 3"><label for="t2">Tracker row filled (hours, outcome, guides)</label></li></ul><div class="counter" id="checkCount"></div></section>
+<div class="callout sec"><h2>🛡 Security lens</h2><p>Instructions and data share one token stream; enforce permissions in code outside the model.</p></div>
+<div class="callout arch"><h2>🏛 Architecture track</h2><p>This week&#x27;s architecture track (Tuesday 2026-11-10): <strong>Data-intensive systems: reliability, scalability, maintainability</strong>. Exercise: Rewrite Bastion&#x27;s non-functional requirements using DDIA&#x27;s reliability/scalability/maintainability vocabulary.</p></div>
+<section><h2><span class="ico">📚</span>Resources</h2><ul class="res"><li><a href="https://arxiv.org/abs/2302.12173" target="_blank" rel="noopener">Greshake et al., indirect prompt injection</a> — The security lens reading</li></ul></section>
+<section><h2><span class="ico">🃏</span>Recall quiz <span class="counter">(tap a card to flip)</span></h2><div class="quiz"><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What is the one-sentence outcome of this week?</div><small>Q1 · tap to reveal</small></div><div class="face back"><div>Example: I can explain how a transformer turns tokens into next-token probabilities and measured that conflicting instructions split probability mass.</div><small>A1</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why is there no instruction/data boundary inside the model?</div><small>Q2 · tap to reveal</small></div><div class="face back"><div>Everything is one flat token stream; role markers are learned conventions, not enforced boundaries.</div><small>A2</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What would a reviewer challenge first?</div><small>Q3 · tap to reveal</small></div><div class="face back"><div>Whether results generalise beyond one small model and a few prompts.</div><small>A3</small></div></div></button></div></section>
+<section class="tomorrow"><h2><span class="ico">🔭</span>Tomorrow</h2><p>Week 5 begins: the next phase of model fundamentals.</p></section>
+<footer>Generated from the AI Engineering Roadmap daily plan · Day 28 of 203 · Times in Asia/Kolkata</footer>
+</div>
+<script>
+(function(){
+  var root=document.documentElement, key='bastion-theme';
+  var saved=localStorage.getItem(key);
+  var dark=saved?saved==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  root.setAttribute('data-theme',dark?'dark':'light');
+  var btn=document.getElementById('themeToggle');
+  function label(){btn.textContent=root.getAttribute('data-theme')==='dark'?'☀ Light':'☾ Dark';}
+  if(btn){label();btn.addEventListener('click',function(){var d=root.getAttribute('data-theme')==='dark'?'light':'dark';root.setAttribute('data-theme',d);localStorage.setItem(key,d);label();rerenderMermaid();});}
+  // checklist persistence
+  var day=document.getElementById('app').dataset.day;
+  var boxes=document.querySelectorAll('.check input[type=checkbox]');
+  function count(){var n=0;boxes.forEach(function(b){if(b.checked)n++;});var c=document.getElementById('checkCount');if(c)c.textContent=n+' / '+boxes.length+' done';}
+  boxes.forEach(function(b,i){var k='bastion-day-'+day+'-task-'+i;b.checked=localStorage.getItem(k)==='1';b.closest('li').classList.toggle('done',b.checked);
+    b.addEventListener('change',function(){localStorage.setItem(k,b.checked?'1':'0');b.closest('li').classList.toggle('done',b.checked);count();});});
+  count();
+  // flip cards
+  document.querySelectorAll('.card').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('flipped');c.setAttribute('aria-pressed',c.classList.contains('flipped'));});});
+  // mermaid (optional, CDN) with graceful fallback
+  var hasMermaid=document.querySelector('.mermaid');
+  window.rerenderMermaid=function(){};
+  if(!hasMermaid)return;
+  var sources=[];document.querySelectorAll('.mermaid').forEach(function(el){sources.push(el.textContent);});
+  function fallback(){document.body.classList.add('no-mermaid');}
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+  s.async=true;
+  var timer=setTimeout(fallback,6000);
+  s.onload=function(){clearTimeout(timer);try{render();}catch(e){fallback();}};
+  s.onerror=function(){clearTimeout(timer);fallback();};
+  function render(){
+    var d=root.getAttribute('data-theme')==='dark';
+    window.mermaid.initialize({startOnLoad:false,theme:d?'dark':'default',securityLevel:'strict',fontFamily:'system-ui, sans-serif'});
+    document.querySelectorAll('.mermaid').forEach(function(el,i){el.removeAttribute('data-processed');el.textContent=sources[i];});
+    window.mermaid.run({querySelector:'.mermaid'}).catch(fallback);
+  }
+  window.rerenderMermaid=function(){if(window.mermaid){try{render();}catch(e){fallback();}}};
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>
