@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day 30: Architecture track: Consistency models, CAP and PACELC</title>
+<script>(function(){try{var s=localStorage.getItem('bastion-theme');var d=s?s==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();</script>
+<style>
+:root{--bg:#f7f8fb;--card:#ffffff;--ink:#1b2130;--muted:#5d6678;--line:#e3e7ef;--accent:#2f6fec;--accent-soft:#e8f0ff;
+--sec:#c0392b;--sec-soft:#fdecea;--arch:#7a4ce0;--arch-soft:#f1ebff;--ok:#1f9d63;--ok-soft:#e6f6ee;--warn:#b7791f;--warn-soft:#fff6e0;
+--code-bg:#f4f6fa;--kw:#8a2be2;--str:#0b7a3e;--num:#b35900;--com:#7b8494;--fn:#1f5fbf;--bi:#a0306a;--shadow:0 1px 2px rgba(20,30,60,.06),0 4px 14px rgba(20,30,60,.06)}
+[data-theme="dark"]{--bg:#0f131a;--card:#171c26;--ink:#e6e9f0;--muted:#9aa3b5;--line:#2a3140;--accent:#6ea0ff;--accent-soft:#1c2740;
+--sec:#ff7b6b;--sec-soft:#3a1f1d;--arch:#b597ff;--arch-soft:#271f3d;--ok:#4fd39a;--ok-soft:#173027;--warn:#f0c060;--warn-soft:#352b14;
+--code-bg:#11161f;--kw:#c792ea;--str:#a5e075;--num:#f78c6c;--com:#6b7689;--fn:#82aaff;--bi:#ff9cac;--shadow:none}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Helvetica,Arial,sans-serif}
+a{color:var(--accent)}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+header.hero{background:linear-gradient(135deg,var(--accent) 0%,#5b3fd6 100%);color:#fff;border-radius:18px;padding:22px 22px 18px;box-shadow:var(--shadow);position:relative}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;opacity:.95}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.18);white-space:nowrap}
+.hero h1{margin:10px 0 6px;font-size:clamp(22px,4vw,30px);line-height:1.2}
+.hero .sub{opacity:.9;font-size:14px}
+.bar{height:8px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;margin-top:12px}
+.bar>span{display:block;height:100%;background:#fff;border-radius:99px}
+.barlabel{display:flex;justify-content:space-between;font-size:12px;margin-top:4px;opacity:.9}
+.toggle{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:13px}
+section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:16px 0;box-shadow:var(--shadow)}
+section>h2{margin:0 0 10px;font-size:19px;display:flex;align-items:center;gap:8px}
+.ico{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:15px}
+.tldr{border-left:5px solid var(--accent)}
+.tldr p{margin:.3em 0}
+ul.obj{margin:.4em 0 0;padding-left:1.2em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.concept{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--card)}
+.concept h3{margin:0 0 6px;font-size:16.5px}
+.concept p{margin:.45em 0}
+.concept.wide{grid-column:1/-1}
+.analogy{background:var(--warn-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+.analogy b{color:var(--warn)}
+.diagram{margin:10px 0;overflow-x:auto}
+.diagram svg{max-width:100%;height:auto;display:block}
+.diagram svg.bars{max-width:620px}
+blockquote{margin:.6em 0;padding:8px 14px;border-left:4px solid var(--line);color:var(--muted);font-style:italic}
+.mermaid-fallback{display:none}
+.no-mermaid .mermaid{display:none}
+.no-mermaid .mermaid-fallback{display:block}
+.tablewrap{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft);color:var(--ink)}
+tr:nth-child(even) td{background:color-mix(in srgb,var(--card) 94%,var(--ink) 6%)}
+.rule{background:var(--ok-soft);border-radius:10px;padding:8px 12px;margin-top:8px;font-size:14.5px}
+pre.code{background:var(--code-bg);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;margin:8px 0}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:.92em;background:var(--code-bg);padding:1px 5px;border-radius:5px}
+pre code{background:none;padding:0}
+.k{color:var(--kw);font-weight:600}.s{color:var(--str)}.n{color:var(--num)}.c{color:var(--com);font-style:italic}.f{color:var(--fn)}.b{color:var(--bi)}
+.check{list-style:none;padding:0;margin:6px 0}
+.check li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin:6px 0}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--ok);flex:none}
+.check li.done{background:var(--ok-soft);text-decoration:line-through;color:var(--muted)}
+.counter{font-size:13px;color:var(--muted)}
+.callout{border-radius:14px;padding:14px 16px;margin:16px 0;border:1px solid var(--line)}
+.callout h2{margin:0 0 6px;font-size:17px}
+.callout.sec{background:var(--sec-soft);border-left:6px solid var(--sec)}
+.callout.sec h2{color:var(--sec)}
+.callout.arch{background:var(--arch-soft);border-left:6px solid var(--arch)}
+.callout.arch h2{color:var(--arch)}
+.callout p{margin:.4em 0}
+.res li{margin:5px 0}
+.quiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{perspective:1000px;cursor:pointer;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit}
+.card .inner{display:grid;transition:transform .5s;transform-style:preserve-3d;min-height:130px}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;padding:14px;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+.front{background:var(--accent-soft)}
+.back{background:var(--ok-soft);transform:rotateY(180deg)}
+.face small{color:var(--muted);font-size:12px;margin-top:8px}
+.tomorrow{border-left:5px solid var(--arch)}
+footer{color:var(--muted);font-size:12.5px;text-align:center;padding:10px 0 30px}
+@media (max-width:600px){.wrap{padding:10px}section{padding:14px}header.hero{padding:18px 16px}.toggle{top:10px;right:10px}}
+@media print{.toggle{display:none}.card .inner{transform:none!important}.back{transform:none;margin-top:6px}.face{backface-visibility:visible}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app" data-day="30">
+<header class="hero"><button class="toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">☾ Dark</button>
+<div class="meta"><span class="pill">Day 30 / 203</span><span class="pill">Tuesday 2026-11-17</span><span class="pill">Week 5 / 29</span><span class="pill">⏱ 120 min</span><span class="pill">arch</span></div>
+<h1>Architecture track: Consistency models, CAP and PACELC</h1>
+<div class="sub">Phase 2: Model fundamentals and fine-tuning · Training, alignment and why attacks work · Guides G20, G20</div>
+<div class="bar" aria-label="Roadmap progress"><span style="width:14.78%"></span></div>
+<div class="barlabel"><span>Roadmap progress 14.8%</span><span>Ends Sun 9 May 2027</span></div></header>
+<section class="tldr"><h2><span class="ico">⚡</span>Today in 30 seconds</h2><p><strong>CAP</strong> says that during a network <strong>partition</strong> a distributed store must choose between <strong>consistency</strong> (every read sees the latest write) and <strong>availability</strong> (every request gets an answer). <strong>PACELC</strong> adds the everyday case: <em>Else</em> (no partition) you still trade <strong>Latency</strong> against <strong>Consistency</strong>. Consistency is a spectrum (linearizable → sequential → causal → eventual), and you pick the weakest model that keeps your invariants safe.</p><p><strong>By the end of today you can:</strong></p><ul class="obj"><li>Explain CAP precisely and why &#x27;pick two of three&#x27; is misleading</li><li>Use PACELC to reason about normal-operation latency tradeoffs</li><li>Rank consistency models from strongest to weakest</li><li>State the consistency needed for Bastion&#x27;s triage result store and RAG index</li></ul></section>
+<section><h2><span class="ico">🧠</span>Concepts</h2><div class="grid"><article class="concept wide"><h3>1. What CAP really says</h3><ul><li><strong>Consistency (C)</strong> in CAP means <em>linearizability</em>: all clients see one up-to-date copy.</li><li><strong>Availability (A):</strong> every non-failing node answers every request.</li><li><strong>Partition tolerance (P):</strong> the system keeps working when messages between nodes are lost. Real networks partition, so P is not optional.</li><li>So the real choice is only <strong>during a partition</strong>: refuse some requests (CP) or answer possibly stale data (AP).</li><li>CAP says nothing about latency or normal operation.</li></ul><div class="diagram"><svg viewBox="0 0 802 124" role="img" aria-label="Partition happens → choose." xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs><g style="color:var(--muted)" font-family="system-ui,sans-serif" font-size="13"><rect x="10" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="95.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Partition</text><text x="95.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">split</text><line x1="182" y1="47.0" x2="210" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="214" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="299.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">CP</text><text x="299.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">wait</text><line x1="386" y1="47.0" x2="414" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="418" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="503.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">AP</text><text x="503.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">stale ok</text><line x1="590" y1="47.0" x2="618" y2="47.0" stroke="currentColor" stroke-width="2" marker-end="url(#ah)"/><rect x="622" y="10" width="170" height="74" rx="12" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="707.0" y="43.0" text-anchor="middle" font-weight="700" fill="var(--ink)">Heal</text><text x="707.0" y="59.0" text-anchor="middle" font-size="11.5" fill="var(--muted)">merge</text></g></svg><div class="counter">Partition happens → choose.</div></div><div class="analogy"><b>Analogy:</b> Two bank branches lose their phone line: either stop withdrawals (CP) or allow them and sort out overdrafts later (AP).</div></article><article class="concept wide"><h3>2. PACELC: the everyday tradeoff</h3><p><strong>If Partition then A or C, Else Latency or Consistency.</strong></p>
+<ul><li>Replication across nodes or regions costs round trips. Waiting for replicas to agree = higher latency but fresher reads.</li><li>Answering from the nearest replica = low latency but possibly stale.</li><li>Systems are labelled by both halves, e.g. PA/EL (Dynamo-style, Cassandra defaults) or PC/EC (strongly consistent stores such as Spanner-style systems).</li></ul><div class="tablewrap"><table><thead><tr><th>Label</th><th>During partition</th><th>Normal operation</th><th>Typical shape</th></tr></thead><tbody><tr><td>PA/EL</td><td>Available</td><td>Low latency</td><td>Eventually consistent KV, caches</td></tr><tr><td>PC/EC</td><td>Consistent</td><td>Pay latency for consistency</td><td>Consensus-backed SQL / coordination stores</td></tr><tr><td>PC/EL</td><td>Consistent</td><td>Low latency</td><td>Primary with async replicas (reads may lag)</td></tr><tr><td>PA/EC</td><td>Available</td><td>Consistent</td><td>Rare, awkward combination</td></tr></tbody></table></div></article><article class="concept wide"><h3>3. The consistency spectrum</h3><ul><li><strong>Linearizable:</strong> behaves like one copy; real-time order respected. Costliest.</li><li><strong>Sequential:</strong> one global order all agree on, not tied to real time.</li><li><strong>Causal:</strong> cause-before-effect order preserved; unrelated writes may differ.</li><li><strong>Read-your-writes / monotonic reads:</strong> session guarantees; you never see your own update vanish or time go backwards.</li><li><strong>Eventual:</strong> replicas converge if writes stop; no promise when.</li><li>Stronger models make code simpler but cost latency and availability. Jepsen&#x27;s hierarchy maps these precisely.</li></ul><div class="tablewrap"><table><thead><tr><th>Model</th><th>Guarantee</th><th>Cost</th><th>Good for</th></tr></thead><tbody><tr><td>Linearizable</td><td>Single up-to-date copy</td><td>High latency, lower availability</td><td>Locks, leader election, unique IDs</td></tr><tr><td>Causal</td><td>Causes seen before effects</td><td>Medium</td><td>Comments, chat, collaborative state</td></tr><tr><td>Session (RYW)</td><td>See your own writes</td><td>Low</td><td>User-facing profile or settings</td></tr><tr><td>Eventual</td><td>Converges later</td><td>Lowest</td><td>Caches, search indexes, analytics</td></tr></tbody></table></div></article><article class="concept wide"><h3>4. Applying it to Bastion</h3><ul><li><strong>Triage result store:</strong> a verdict (allow / block / escalate) must not silently flip or be lost. Need <em>read-your-writes</em> at least and a single writer per item; linearizable for the &#x27;already actioned&#x27; flag to avoid double-action. Accept higher write latency; triage is not millisecond-critical.</li><li><strong>RAG index:</strong> documents are added or removed in batches. <em>Eventual</em> consistency is fine for relevance, but <strong>deletions and access changes</strong> are a security issue: a revoked document must stop being retrievable quickly. Give up freshness for new content, not for permission changes (filter by ACL at query time against the authoritative store).</li><li>Always state what you give up.</li></ul></article></div></section>
+<section><h2><span class="ico">⚖</span>When to choose which</h2><h3>G20. Distributed data and integration patterns</h3><p>G20 helps choose data stores. Match each store to the weakest consistency model that keeps its invariants safe.</p><div class="tablewrap"><table><thead><tr><th>Pattern</th><th>How it works</th><th>Choose when</th></tr></thead><tbody><tr><td>Synchronous request/response</td><td>Caller waits for callee</td><td>Need immediate answer; callee is reliable and fast</td></tr><tr><td>Asynchronous messaging</td><td>Fire and forget or request/reply over a queue</td><td>Decoupling, buffering, retries</td></tr><tr><td>Transactional outbox</td><td>Write business row and outbox event in one DB transaction; publisher drains the outbox</td><td>Reliably emit events after a DB write without dual-write bugs</td></tr><tr><td>Saga (orchestration or choreography)</td><td>Sequence of local transactions with compensations</td><td>Multi-service workflows that cannot share one ACID transaction</td></tr><tr><td>CDC (change data capture)</td><td>Stream DB changes (Debezium) into Kafka/search/analytics</td><td>Keep projections and search indexes in sync</td></tr><tr><td>Idempotent consumers</td><td>Deduplicate by idempotency key</td><td>All consumers that can see retries</td></tr><tr><td>Inbox / dedup store</td><td>Persist processed message IDs</td><td>Exactly-once <em>effect</em> despite at-least-once delivery</td></tr></tbody></table></div><p class="counter">Full guide: roadmap Section 9, <a href="../roadmap.html#g20-distributed-data-and-integration-patterns">G20 Distributed data and integration patterns</a>.</p></section>
+<section><h2><span class="ico">🐍</span>Stale reads from a lagging replica</h2><p>A tiny simulation: writes go to the primary; the replica applies them after a delay.</p><pre class="code"><code><span class="k">import</span> collections
+primary={}
+replica={}
+log=collections.deque()
+
+<span class="k">def</span> <span class="f">write</span>(k,v):
+    primary[k]=v
+    log.append((k,v))
+
+<span class="k">def</span> <span class="f">replicate_one</span>():
+    <span class="k">if</span> log:
+        k,v=log.popleft(); replica[k]=v
+
+write(<span class="s">&#x27;verdict:42&#x27;</span>,<span class="s">&#x27;escalate&#x27;</span>)
+<span class="b">print</span>(<span class="s">&#x27;replica read:&#x27;</span>,replica.get(<span class="s">&#x27;verdict:42&#x27;</span>))
+replicate_one()
+<span class="b">print</span>(<span class="s">&#x27;replica read:&#x27;</span>,replica.get(<span class="s">&#x27;verdict:42&#x27;</span>))</code></pre><p>The first read is stale (an AP/EL choice). Reading from the primary, or waiting for replication, buys consistency with latency.</p></section>
+<section><h2><span class="ico">✅</span>Hands-on task</h2><p>Skim the three resources, then write a one-page note and commit it under <code>bastion/docs/architecture/</code>.</p><ul class="check"><li><input type="checkbox" id="t0" aria-label="task 1"><label for="t0">Skim Abadi&#x27;s PACELC paper (intro and examples)</label></li><li><input type="checkbox" id="t1" aria-label="task 2"><label for="t1">Read the Jepsen consistency hierarchy page</label></li><li><input type="checkbox" id="t2" aria-label="task 3"><label for="t2">Read DDIA&#x27;s consistency chapters (replication and consistency/consensus)</label></li><li><input type="checkbox" id="t3" aria-label="task 4"><label for="t3">Write the triage store and RAG index consistency decisions (&lt;=1 page)</label></li><li><input type="checkbox" id="t4" aria-label="task 5"><label for="t4">State one tradeoff explicitly and commit</label></li></ul><div class="counter" id="checkCount"></div></section>
+<div class="callout sec"><h2>🛡 Security lens</h2><p>Write a one-page note, &#x27;Why safety training is shallow&#x27;, linking jailbreak families to mechanisms. Reusable for onboarding red-teamers.</p></div>
+<div class="callout arch"><h2>🏛 Architecture track</h2><p>Ask of every store: what is the worst thing a stale read can do here? If the answer is &#x27;security or money&#x27;, pay for stronger consistency.</p></div>
+<section><h2><span class="ico">📚</span>Resources</h2><ul class="res"><li><a href="" target="_blank" rel="noopener">DDIA consistency chapters</a> — Replication and consistency/consensus chapters</li><li><a href="https://www.cs.umd.edu/~abadi/papers/abadi-pacelc.pdf" target="_blank" rel="noopener">Abadi, PACELC</a> — Original paper</li><li><a href="https://jepsen.io/consistency" target="_blank" rel="noopener">Jepsen consistency hierarchy</a> — Interactive map</li></ul></section>
+<section><h2><span class="ico">🃏</span>Recall quiz <span class="counter">(tap a card to flip)</span></h2><div class="quiz"><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Why is &#x27;pick 2 of 3&#x27; misleading for CAP?</div><small>Q1 · tap to reveal</small></div><div class="face back"><div>Partitions will happen, so P is not optional. The choice is C vs A only while partitioned.</div><small>A1</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>What does PACELC add?</div><small>Q2 · tap to reveal</small></div><div class="face back"><div>Even without a partition you trade latency against consistency.</div><small>A2</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Which model suits a revoked-document check in RAG?</div><small>Q3 · tap to reveal</small></div><div class="face back"><div>A strong read of the authoritative permission store; the index itself may stay eventual.</div><small>A3</small></div></div></button><button class="card" type="button" aria-pressed="false"><div class="inner"><div class="face front"><div>Name two session guarantees weaker than linearizability.</div><small>Q4 · tap to reveal</small></div><div class="face back"><div>Read-your-writes and monotonic reads.</div><small>A4</small></div></div></button></div></section>
+<section class="tomorrow"><h2><span class="ico">🔭</span>Tomorrow</h2><p>Day 31: next item in the Phase 2 plan.</p></section>
+<footer>Generated from the AI Engineering Roadmap daily plan · Day 30 of 203 · Times in Asia/Kolkata</footer>
+</div>
+<script>
+(function(){
+  var root=document.documentElement, key='bastion-theme';
+  var saved=localStorage.getItem(key);
+  var dark=saved?saved==='dark':(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  root.setAttribute('data-theme',dark?'dark':'light');
+  var btn=document.getElementById('themeToggle');
+  function label(){btn.textContent=root.getAttribute('data-theme')==='dark'?'☀ Light':'☾ Dark';}
+  if(btn){label();btn.addEventListener('click',function(){var d=root.getAttribute('data-theme')==='dark'?'light':'dark';root.setAttribute('data-theme',d);localStorage.setItem(key,d);label();rerenderMermaid();});}
+  // checklist persistence
+  var day=document.getElementById('app').dataset.day;
+  var boxes=document.querySelectorAll('.check input[type=checkbox]');
+  function count(){var n=0;boxes.forEach(function(b){if(b.checked)n++;});var c=document.getElementById('checkCount');if(c)c.textContent=n+' / '+boxes.length+' done';}
+  boxes.forEach(function(b,i){var k='bastion-day-'+day+'-task-'+i;b.checked=localStorage.getItem(k)==='1';b.closest('li').classList.toggle('done',b.checked);
+    b.addEventListener('change',function(){localStorage.setItem(k,b.checked?'1':'0');b.closest('li').classList.toggle('done',b.checked);count();});});
+  count();
+  // flip cards
+  document.querySelectorAll('.card').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('flipped');c.setAttribute('aria-pressed',c.classList.contains('flipped'));});});
+  // mermaid (optional, CDN) with graceful fallback
+  var hasMermaid=document.querySelector('.mermaid');
+  window.rerenderMermaid=function(){};
+  if(!hasMermaid)return;
+  var sources=[];document.querySelectorAll('.mermaid').forEach(function(el){sources.push(el.textContent);});
+  function fallback(){document.body.classList.add('no-mermaid');}
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+  s.async=true;
+  var timer=setTimeout(fallback,6000);
+  s.onload=function(){clearTimeout(timer);try{render();}catch(e){fallback();}};
+  s.onerror=function(){clearTimeout(timer);fallback();};
+  function render(){
+    var d=root.getAttribute('data-theme')==='dark';
+    window.mermaid.initialize({startOnLoad:false,theme:d?'dark':'default',securityLevel:'strict',fontFamily:'system-ui, sans-serif'});
+    document.querySelectorAll('.mermaid').forEach(function(el,i){el.removeAttribute('data-processed');el.textContent=sources[i];});
+    window.mermaid.run({querySelector:'.mermaid'}).catch(fallback);
+  }
+  window.rerenderMermaid=function(){if(window.mermaid){try{render();}catch(e){fallback();}}};
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>
